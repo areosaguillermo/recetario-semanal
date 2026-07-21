@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recetario semanal · Banco de recetas</title>
+<style>
+:root{
+  --bg:#FBF7F0; --card:#FFFFFF; --ink:#3A322C; --ink-soft:#7A6E62;
+  --terra:#C15B3F; --terra-d:#A64A32; --green:#5B7A4E; --sun:#E0A03C;
+  --line:#EDE4D6; --chip:#F3ECE0; --shadow:0 2px 10px rgba(80,60,40,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--terra)}
+header.top{background:linear-gradient(135deg,#C15B3F,#A64A32);color:#fff;padding:26px 20px 22px}
+header.top .wrap{max-width:1060px;margin:0 auto}
+header.top h1{margin:0;font-size:26px;letter-spacing:.2px}
+header.top p{margin:6px 0 0;opacity:.92;font-size:14.5px;max-width:640px}
+.tabs{max-width:1060px;margin:0 auto;padding:0 20px;display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.tab{background:rgba(255,255,255,.15);color:#fff;border:none;padding:9px 16px;border-radius:999px;
+  font-size:14.5px;cursor:pointer;font-weight:600;transition:.15s}
+.tab:hover{background:rgba(255,255,255,.28)}
+.tab.active{background:#fff;color:var(--terra-d)}
+main{max-width:1060px;margin:0 auto;padding:22px 20px 60px}
+.view{display:none} .view.active{display:block}
+h2.sec{font-size:20px;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+h2.sec:first-child{margin-top:6px}
+.muted{color:var(--ink-soft);font-size:13.5px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+button.action{background:var(--terra);color:#fff;border:none;padding:9px 15px;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+button.action:hover{background:var(--terra-d)}
+button.ghost{background:#fff;color:var(--terra-d);border:1px solid var(--line)}
+/* WEEK GRID */
+.weekgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:820px){.weekgrid{grid-template-columns:1fr}}
+.daycol{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.dayhead{background:var(--green);color:#fff;padding:8px 12px;font-weight:700;font-size:15px;text-align:center}
+.slot{padding:11px 12px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:none}
+.slot .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);font-weight:700}
+.slot .meal{margin-top:4px;font-weight:600;font-size:14.5px;cursor:pointer;color:var(--ink)}
+.slot .meal:hover{color:var(--terra)}
+.slot .who{display:inline-block;margin-top:5px;font-size:11.5px;background:var(--chip);color:var(--ink-soft);
+  padding:2px 8px;border-radius:999px}
+.slot .pers{display:flex;align-items:center;gap:6px;margin-top:6px}
+.slot .pers span{font-size:11.5px;background:var(--chip);color:var(--ink-soft);padding:2px 8px;border-radius:999px;flex:1;text-align:center}
+.slot .pers button{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--terra-d);
+  font-size:15px;font-weight:700;cursor:pointer;line-height:1;padding:0}
+.slot .pers button:hover:not(:disabled){background:var(--terra);color:#fff;border-color:var(--terra)}
+.slot .pers button:disabled{opacity:.35;cursor:default}
+.slot select{width:100%;margin-top:6px;font-size:12.5px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.slot .emoji{font-size:15px;margin-right:3px}
+/* SHOPPING */
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.cols2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:16px}
+.panel h3{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:7px}
+.rubro{margin-bottom:12px}
+.rubro .rt{font-weight:700;color:var(--terra-d);font-size:14px;border-bottom:2px solid var(--chip);padding-bottom:3px;margin-bottom:6px}
+.shop-item{display:flex;gap:9px;align-items:flex-start;padding:3px 0;font-size:14px}
+.shop-item input{margin-top:4px}
+.shop-item .q{color:var(--ink-soft);font-size:12.5px}
+.shop-item.checked label{text-decoration:line-through;opacity:.5}
+ol.steps{margin:0;padding-left:20px} ol.steps li{margin-bottom:7px}
+ul.plain{margin:6px 0;padding-left:18px} ul.plain li{margin-bottom:5px}
+.callout{background:#FDF6E9;border-left:4px solid var(--sun);padding:10px 13px;border-radius:8px;font-size:13.7px;margin:8px 0}
+.callout.baby{background:#F0F5EC;border-left-color:var(--green)}
+.order-step{display:flex;gap:11px;margin-bottom:10px}
+.order-step .n{flex:0 0 26px;height:26px;background:var(--terra);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.order-step .d{font-size:14px}
+.order-step .d b{color:var(--terra-d)}
+/* BANK */
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 16px}
+.chip{background:var(--chip);border:1px solid transparent;color:var(--ink);padding:6px 13px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600}
+.chip.active{background:var(--terra);color:#fff}
+#search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;width:100%;max-width:340px;margin-bottom:6px}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;display:flex;flex-direction:column}
+.rcard:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(80,60,40,.13)}
+.rcard .em{font-size:30px}
+.rcard h4{margin:7px 0 4px;font-size:15.5px;line-height:1.3}
+.rcard .meta{font-size:12px;color:var(--ink-soft);margin-top:auto;padding-top:8px}
+.rcard .tagrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.rcard .t{font-size:10.5px;background:var(--chip);color:var(--ink-soft);padding:2px 7px;border-radius:999px}
+.rcard .t.fav{background:#F7E4D8;color:var(--terra-d)}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(50,40,30,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:50;overflow:auto}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:720px;width:100%;padding:0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal .mh{background:linear-gradient(135deg,#C15B3F,#A64A32);color:#fff;padding:20px 22px;position:relative}
+.modal .mh h3{margin:0;font-size:21px} .modal .mh .em{font-size:26px}
+.modal .mh .badges{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;font-size:12.5px}
+.modal .mh .badges span{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:999px}
+.modal .close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.25);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1}
+.mb{padding:20px 22px;max-height:60vh;overflow:auto}
+.mb h5{margin:16px 0 7px;font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--terra-d)}
+.mb h5:first-child{margin-top:0}
+.ing-list{list-style:none;padding:0;margin:0}
+.ing-list li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ing-list li .c{color:var(--ink-soft);font-size:13px;text-align:right;flex:0 0 auto}
+.ing-list li.reuso{background:#F0F5EC;margin:0 -8px;padding:5px 8px;border-radius:6px;border-bottom:none}
+.footnote{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:26px 10px 0}
+/* En pantalla el recetario imprimible está oculto; al imprimir se muestra SOLO él */
+#print-root{display:none}
+@media print{
+  @page{margin:14mm 12mm}
+  body{background:#fff}
+  header.top,.tabs,main,.overlay{display:none!important}
+  #print-root{display:block!important}
+}
+
+.bk-cover{background:linear-gradient(135deg,#C15B3F,#A64A32);color:#fff;padding:40px 34px;border-radius:14px;margin-bottom:20px}
+.bk-cover h1{font-size:30px;margin:0 0 6px}
+.bk-cover p{opacity:.95;font-size:13px;margin:0;max-width:520px}
+.bk-cover .bk-wk{display:inline-block;margin-top:14px;background:rgba(255,255,255,.2);padding:5px 14px;border-radius:999px;font-weight:700;font-size:13px}
+.bk-sec{color:#A64A32;font-size:17px;border-bottom:2px solid #EDE4D6;padding-bottom:5px;margin:20px 0 10px}
+.bk-intro{background:#F0F5EC;border-left:4px solid #5B7A4E;padding:10px 13px;border-radius:8px;font-size:11px;margin-bottom:12px}
+.bk-note{font-size:10.5px;color:#7A6E62;margin:0 0 10px}
+table.bk-menu{width:100%;border-collapse:collapse;font-size:11px}
+table.bk-menu th{background:#5B7A4E;color:#fff;padding:7px;text-align:left;font-size:11px}
+table.bk-menu td{border:1px solid #EDE4D6;padding:7px;vertical-align:top}
+table.bk-menu td.bk-dia{background:#F3ECE0;font-weight:700;width:70px}
+.bk-who{color:#7A6E62;font-size:9.5px}
+.bk-ostep{display:flex;gap:9px;margin-bottom:7px;font-size:11px}
+.bk-ostep .bk-on{flex:0 0 20px;height:20px;background:#C15B3F;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10.5px}
+.bk-shopgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+.bk-shopcol h4{color:#A64A32;font-size:12px;border-bottom:1.5px solid #F3ECE0;padding-bottom:3px;margin:0 0 4px}
+table.bk-shop{width:100%;border-collapse:collapse;font-size:10.6px}
+table.bk-shop td{padding:2px 0;vertical-align:top}
+table.bk-shop td.bk-chk{width:16px;color:#B9A98F}
+table.bk-shop td.bk-qt{color:#7A6E62;text-align:right;font-size:10px}
+.bk-staples{margin-top:8px;background:#FDF6E9;border-left:4px solid #E0A03C;padding:8px 11px;border-radius:8px;font-size:10.5px}
+.bk-receta{border:1px solid #EDE4D6;border-radius:12px;padding:13px 15px;margin-bottom:12px;break-inside:avoid;page-break-inside:avoid;break-before:page;page-break-before:always}
+.bk-receta.bk-first{break-before:auto;page-break-before:auto}
+.bk-rh{display:flex;align-items:center;gap:9px}
+.bk-rh .bk-rem{font-size:22px}
+.bk-rh h3{font-size:15.5px;color:#3A322C;margin:0}
+.bk-rmeta{color:#7A6E62;font-size:10px;margin:5px 0 9px;border-bottom:1px dashed #EDE4D6;padding-bottom:7px}
+.bk-rcols{display:grid;grid-template-columns:0.9fr 1.5fr;gap:16px}
+.bk-receta h5{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#A64A32;margin:0 0 5px}
+table.bk-ing{width:100%;border-collapse:collapse;font-size:10.6px}
+table.bk-ing td{padding:3px 0;border-bottom:1px solid #F1EADD}
+table.bk-ing td.bk-c{text-align:right;color:#7A6E62;white-space:nowrap;padding-left:6px}
+table.bk-ing tr.bk-reuso td{background:#F0F5EC}
+.bk-rcols ol{margin:0;padding-left:16px} .bk-rcols li{margin-bottom:5px}
+.bk-cal{background:#FBF7F0;border-left:3px solid #C15B3F;padding:7px 10px;border-radius:7px;font-size:10.5px;margin-top:8px}
+.bk-cal.bk-reu{border-left-color:#5B7A4E;background:#F5F8F2}
+.bk-tips{font-size:10.3px;margin-top:7px} .bk-tips ul{margin:3px 0;padding-left:16px}
+.bk-guia{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bk-gbox{border:1px solid #EDE4D6;border-radius:10px;padding:11px 13px;font-size:10.6px}
+.bk-gbox h4{color:#A64A32;font-size:12px;margin:0 0 5px}
+.bk-gbox ul{margin:0;padding-left:15px} .bk-gbox li{margin-bottom:4px}
+.bk-pb{page-break-before:always}
+.bk-foot{text-align:center;color:#9A8B79;font-size:10px;margin-top:16px}
+
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>🍳 Recetario semanal</h1>
+  <p>Banco de recetas casero, rico y fácil. Armá la semana, mirá cada paso y llevate la lista de compras ordenada por góndola.</p>
+</div></header>
+<div class="tabs">
+  <button class="tab active" data-view="semana">📅 La semana</button>
+  <button class="tab" data-view="compra">🛒 Lista de compras</button>
+  <button class="tab" data-view="banco">📖 Banco de recetas</button>
+  <button class="tab" data-view="guia">💡 Guía de cocina</button>
+</div>
+<main>
+  <!-- SEMANA -->
+  <section class="view active" id="view-semana">
+    <div class="toolbar no-print">
+      <button class="action" onclick="window.print()">🖨️ Imprimir recetario para la cocinera</button>
+      <button class="ghost action" onclick="resetSemana()">↩️ Restablecer semana original</button>
+      <span class="muted">Genera el recetario completo (menú, orden de cocina, lista de compras y recetas paso a paso). En el diálogo elegí "Guardar como PDF". Tocá un plato para ver la receta o cambialo con el selector.</span>
+    </div>
+    <h2 class="sec">📅 Menú de la semana</h2>
+    <div class="weekgrid" id="weekgrid"></div>
+    <div class="callout baby" style="margin-top:16px"><b>Cómo leer la semana:</b> con los botones <b>− / +</b> elegís cuántas personas comen en cada comida: las cantidades de las recetas y la lista de compras se ajustan solas. Las preparaciones grandes (pollo, boloñesa, milanesas) se cocinan una vez y se reusan varios días. Tus cambios quedan guardados en este dispositivo.</div>
+    <h2 class="sec">👩‍🍳 Orden de cocina (qué hacer primero)</h2>
+    <div class="panel" id="orden"></div>
+  </section>
+  <!-- COMPRA -->
+  <section class="view" id="view-compra">
+    <div class="toolbar no-print">
+      <button class="ghost action" onclick="copyList()">📋 Copiar lista</button>
+      <button class="ghost action" onclick="resetChecks()">↩️ Destildar todo</button>
+      <button class="action" onclick="window.print()">🖨️ Imprimir recetario</button>
+    </div>
+    <h2 class="sec">🛒 Lista de compras de la semana</h2>
+    <p class="muted">Generada automáticamente según el menú de arriba, ordenada por sector del súper. Incluye las tandas grandes para reusar. Tildá lo que ya tengas.</p>
+    <div id="compra"></div>
+  </section>
+  <!-- BANCO -->
+  <section class="view" id="view-banco">
+    <h2 class="sec">📖 Banco de recetas</h2>
+    <input id="search" placeholder="🔎 Buscar receta (ej: pollo, tarta, merluza)..." oninput="renderBank()">
+    <div class="filters" id="filters"></div>
+    <div class="cardgrid" id="cardgrid"></div>
+  </section>
+  <!-- GUIA -->
+  <section class="view" id="view-guia">
+    <h2 class="sec">💡 Guía de cocina y conservación</h2>
+    <div class="cols2">
+      <div class="panel"><h3>🗄️ Conservación y recalentado</h3><ul class="plain" id="conserva"></ul></div>
+      <div class="panel"><h3>🔥 Sacar provecho a los equipos</h3>
+        <ul class="plain">
+          <li><b>Air fryer:</b> milanesas, papas rústicas y pescado quedan crocantes con muy poco aceite. Precalentá 3 min y no amontones (cociná en tandas).</li>
+          <li><b>Horno:</b> ideal para tartas, pasteles, lasaña y bandejas de pollo con verduras. Todo en una fuente = menos platos.</li>
+          <li><b>Arrocera:</b> no solo arroz — herví ahí el pollo desmenuzado y guardá el caldo. Cociná arroz de más para el bowl o de guarnición.</li>
+          <li><b>Licuadora/procesadora:</b> cremas sin grumos y picar la verdura de la boloñesa en segundos.</li>
+          <li><b>Microondas:</b> el mejor amigo para recalentar purés y cremas con un chorrito de leche o caldo.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel"><h3>🧼 Seguridad e higiene en la cocina</h3>
+      <ul class="plain">
+        <li>Cociná siempre las carnes, el pollo, el pescado y los mariscos <b>por completo</b> (sin partes rosadas ni translúcidas) y el huevo bien firme.</li>
+        <li>Recalentá las sobras hasta que <b>humeen</b> (bien calientes).</li>
+        <li>Lavá bien las verduras y frutas que se comen crudas (tomate, palta, lechuga).</li>
+        <li>El pescado, cocinalo el mismo día que lo comprás o congelalo enseguida.</li>
+        <li>Mantené separadas las tablas de cortar crudo y cocido; lavate las manos entre uno y otro.</li>
+      </ul>
+    </div>
+    <div class="panel"><h3>♻️ Minimizar desperdicios</h3>
+      <ul class="plain">
+        <li>Cociná las <b>tandas grandes</b> (pollo, boloñesa) apenas empieza la semana: rinden 3-4 comidas.</li>
+        <li>Guardá siempre el <b>caldo del pollo</b>: es la base de sopas y para humedecer.</li>
+        <li>Las <b>sobras</b> con etiqueta y fecha en la heladera; lo que no uses en 3 días, al freezer.</li>
+        <li>Las verduras que empiezan a marchitarse van a una <b>crema</b> o a la boloñesa.</li>
+      </ul>
+    </div>
+  </section>
+  <div class="footnote">Hecho con cariño para cocinar rico toda la semana 🧡 · Tocá 📖 Banco para explorar todas las recetas.</div>
+</main>
+<div id="print-root"></div>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+<script>
+const DATA = {"recetas":[{"id":"pollo-desmenuzado","nombre":"Pollo desmenuzado base (arrocera u olla)","emoji":"🍗","tags":["Base para reusar","Pollo"],"proteina":"Pollo","comida":"base","tiempo":"30 min","dificultad":"Muy fácil","porciones":"Rinde ~6 porciones","batch":true,"equipo":["Arrocera","Olla"],"ingredientes":[{"item":"Pechugas de pollo","cant":"800 g (2 grandes)","rubro":"carniceria","num":800,"escalable":true,"unidad":"g","nota":"2 grandes"},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Sal y pimienta","cant":"a gusto","rubro":"almacen","escalable":false},{"item":"Hoja de laurel (opcional)","cant":"1","rubro":"almacen","num":1,"escalable":true}],"pasos":["Poné las pechugas en la arrocera (o en una olla). Sumá la zanahoria y la cebolla cortadas en trozos grandes, el laurel, sal y pimienta.","Cubrí con agua hasta tapar el pollo. Si usás arrocera, tapá y poné en 'cook'; si usás olla, llevá a hervor suave.","Cociná 20-25 minutos. El pollo está listo cuando al cortar el trozo más gordo no queda nada rosado en el centro (blanco parejo).","Retirá el pollo, dejalo entibiar 5 minutos y desmenuzalo con dos tenedores (o con las manos).","Guardá el caldo colado en un frasco: sirve para sopas, para el arroz o para humedecer el pollo al recalentar."],"resultado":"Pollo tierno, blanco y jugoso, fácil de deshilachar. Sin gusto fuerte, ideal como relleno de tartas, tacos, quesadillas y sopas.","reuso":"Es la preparación estrella para reusar. Con esta tanda hacés tarta de pollo, tacos y quesadillas en la misma semana. Guardá el caldo aparte.","tips":["Cociná de más: rinde para 2-3 comidas.","El pollo hervido se conserva 3 días en heladera y se congela muy bien."],"rinde":5},{"id":"bolonesa","nombre":"Salsa boloñesa casera (tanda grande)","emoji":"🍅","tags":["Base para reusar","Carne"],"proteina":"Carne vacuna","comida":"base","tiempo":"40 min","dificultad":"Fácil","porciones":"Rinde ~6 porciones","batch":true,"equipo":["Olla"],"ingredientes":[{"item":"Carne picada","cant":"700 g","rubro":"carniceria","num":700,"escalable":true,"unidad":"g"},{"item":"Cebolla","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Zanahoria","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Diente de ajo","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Tomate triturado / pulpa","cant":"2 latas (800 g)","rubro":"almacen","num":2,"escalable":true,"unidad":"lata","notag":800},{"item":"Extracto de tomate","cant":"1 cda","rubro":"almacen","num":1,"escalable":true,"unidad":"cda"},{"item":"Aceite","cant":"2 cdas","rubro":"almacen","num":2,"escalable":true,"unidad":"cda"},{"item":"Sal, pimienta, orégano","cant":"a gusto","rubro":"almacen","escalable":false},{"item":"Azúcar","cant":"1 pizca","rubro":"almacen","escalable":false}],"pasos":["Picá bien chico la cebolla, la zanahoria y el ajo (podés usar la procesadora).","En una olla grande con el aceite, rehogá las verduras a fuego medio 6-8 minutos hasta que estén blandas.","Subí el fuego y agregá la carne picada. Revolvé rompiendo los grumos hasta que se dore y no quede roja (5-7 min).","Sumá el tomate triturado, el extracto, sal, pimienta, orégano y la pizca de azúcar (corta la acidez).","Bajá el fuego y cociná destapado 20-25 minutos, revolviendo cada tanto, hasta que espese.","Probá y ajustá la sal."],"resultado":"Salsa espesa, brillante y sabrosa, con la carne integrada. No debe quedar aguada: si suelta líquido, cociná unos minutos más.","reuso":"Con esta tanda armás la pasta boloñesa y la lasaña de la semana. Si te sobra, se congela en porciones hasta 3 meses.","tips":["Cuanto más chica la verdura, más 'una sola cosa' queda la salsa.","Cociná de más y congelá: es salvavidas para una cena rápida."],"rinde":4},{"id":"milanesas-pollo","nombre":"Milanesas de pollo al horno o air fryer con puré","emoji":"🍽️","tags":["Favorita","Milanesas","Pollo"],"proteina":"Pollo","comida":"cena","tiempo":"45 min","dificultad":"Fácil","porciones":"2 (hacé de más para reusar)","batch":true,"equipo":["Horno","Air fryer"],"ingredientes":[{"item":"Pechugas de pollo fileteadas para milanesa","cant":"6 filetes (~700 g)","rubro":"carniceria","num":6,"escalable":true,"unidad":"filete","notag":700},{"item":"Huevos","cant":"3","rubro":"lacteos","num":3,"escalable":true},{"item":"Pan rallado","cant":"300 g","rubro":"almacen","num":300,"escalable":true,"unidad":"g"},{"item":"Diente de ajo","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Perejil (opcional)","cant":"1 puñado","rubro":"verduleria","num":1,"escalable":true,"nota":"puñado"},{"item":"Papas","cant":"1 kg","rubro":"verduleria","num":1000,"escalable":true,"unidad":"g"},{"item":"Leche","cant":"1/2 taza","rubro":"lacteos","num":0.5,"escalable":true,"unidad":"taza"},{"item":"Manteca","cant":"1 cda","rubro":"lacteos","num":1,"escalable":true,"unidad":"cda"},{"item":"Aceite en spray o hilo de aceite","cant":"c/n","rubro":"almacen","escalable":false},{"item":"Sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C (o la air fryer a 190°C).","Batí los huevos con el ajo picado, perejil, sal y pimienta en un bol.","Poné el pan rallado en un plato hondo. Pasá cada filete por huevo y después por pan rallado, apretando bien para que cubra parejo.","Acomodá las milanesas en la bandeja del horno con un hilo de aceite (o en la air fryer en tandas, sin encimar). Rociá con un poco de aceite arriba.","Horno: 12 min de un lado, dá vuelta y 8-10 min más. Air fryer: 10 min, dá vuelta, 5-6 min más. Quedan doradas y crocantes.","Puré: pelá y cortá las papas, hervilas en agua con sal 15-18 min hasta que se pinchen fácil. Colá, pisá y mezclá con la leche tibia y la manteca. Salpimentá.","Serví 2 milanesas con puré. Guardá las milanesas y el puré que sobren para el día siguiente."],"resultado":"Milanesas doradas y crocantes por fuera, jugosas por dentro. Puré liso y cremoso, sin grumos.","reuso":"Hacé las 6 milanesas aunque cenen 2: las que sobran se convierten en Milanesas napolitanas al día siguiente. El puré sobrante se recalienta en microondas con un chorrito de leche.","tips":["Air fryer = más crocante y menos aceite.","Para empanar más rápido, armá una 'línea de producción': huevo → pan → bandeja."],"rinde":4},{"id":"milanesas-napolitana","nombre":"Milanesas napolitanas (con milanesas del día anterior)","emoji":"🧀","tags":["Favorita","Reusa milanesas","Rápida"],"proteina":"Pollo","comida":"almuerzo","tiempo":"20 min","dificultad":"Muy fácil","porciones":"2","batch":false,"equipo":["Horno","Air fryer"],"ingredientes":[{"item":"Milanesas de pollo ya hechas","cant":"4 (sobrantes)","rubro":"reuso","escalable":false,"reuso":true},{"item":"Puré ya hecho","cant":"para 2 (sobrante)","rubro":"reuso","escalable":false,"reuso":true},{"item":"Salsa de tomate o boloñesa","cant":"1 taza","rubro":"reuso","escalable":false,"reuso":true},{"item":"Muzzarella o queso para gratinar","cant":"150 g","rubro":"lacteos","num":150,"escalable":true,"unidad":"g"},{"item":"Jamón cocido (opcional)","cant":"2 fetas","rubro":"carniceria","num":2,"escalable":true,"unidad":"feta"},{"item":"Orégano","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C.","Acomodá las milanesas en una fuente. Poné una cucharada de salsa de tomate sobre cada una.","Si querés, sumá una feta de jamón. Cubrí con la muzzarella y espolvoreá orégano.","Llevá al horno 8-10 minutos, hasta que el queso se derrita y burbujee.","Mientras, recalentá el puré en el microondas con un chorrito de leche, revolviendo cada minuto."],"resultado":"Milanesa tibia con queso fundido y dorado arriba. El puré vuelve a quedar cremoso.","reuso":"Nace de las milanesas y el puré de la cena anterior. Cero desperdicio y listo en 20 minutos.","tips":["Si no tenés salsa aparte, usá 2 cucharadas de la boloñesa de la semana."],"rinde":2},{"id":"pasta-bolonesa","nombre":"Pasta con salsa boloñesa","emoji":"🍝","tags":["Favorita","Pastas","Reusa boloñesa","Rápida"],"proteina":"Carne vacuna","comida":"cena","tiempo":"20 min","dificultad":"Muy fácil","porciones":"2","batch":false,"equipo":["Olla"],"ingredientes":[{"item":"Salsa boloñesa ya hecha","cant":"para 2 porciones","rubro":"reuso","escalable":false,"reuso":true},{"item":"Fideos (spaghetti, mostacholes)","cant":"250 g","rubro":"almacen","num":250,"escalable":true,"unidad":"g"},{"item":"Queso rallado","cant":"a gusto","rubro":"lacteos","escalable":false},{"item":"Sal","cant":"para el agua","rubro":"almacen","escalable":false}],"pasos":["Poné a hervir abundante agua con sal en una olla grande.","Cuando rompa el hervor, echá los fideos y cocinalos el tiempo que indica el paquete (suelen ser 8-10 min). Quedan 'al dente', no pisados.","Mientras, calentá la boloñesa en una olla o en el microondas.","Colá los fideos, mezclalos con la salsa caliente y serví con queso rallado."],"resultado":"Fideos sueltos y firmes, bien cubiertos de salsa. Plato abundante y reconfortante.","reuso":"Usa la boloñesa que cocinaste antes: la cena se arma en 20 minutos.","tips":["Guardá 1/2 taza del agua de cocción: si la salsa quedó espesa, un chorrito la afloja."],"rinde":2},{"id":"lasana","nombre":"Lasaña sencilla","emoji":"🍲","tags":["Favorita","Pastas","Reusa boloñesa"],"proteina":"Carne vacuna","comida":"cena","tiempo":"40 min","dificultad":"Fácil","porciones":"2 (rinde 3-4)","batch":true,"equipo":["Horno"],"ingredientes":[{"item":"Salsa boloñesa ya hecha","cant":"para 3-4 porciones","rubro":"reuso","escalable":false,"reuso":true},{"item":"Tapas de lasaña (precocidas)","cant":"1 caja","rubro":"almacen","num":1,"escalable":true,"unidad":"caja"},{"item":"Muzzarella","cant":"250 g","rubro":"lacteos","num":250,"escalable":true,"unidad":"g"},{"item":"Queso rallado","cant":"4 cdas","rubro":"lacteos","num":4,"escalable":true,"unidad":"cda"},{"item":"Leche","cant":"500 ml","rubro":"lacteos","num":500,"escalable":true,"unidad":"ml"},{"item":"Manteca","cant":"40 g","rubro":"lacteos","num":40,"escalable":true,"unidad":"g"},{"item":"Harina","cant":"3 cdas","rubro":"almacen","num":3,"escalable":true,"unidad":"cda"},{"item":"Nuez moscada (opcional)","cant":"1 pizca","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C.","Salsa blanca: derretí la manteca en una olla, sumá la harina y revolvé 1 minuto. Agregá la leche de a poco sin dejar de revolver hasta que espese (5-6 min). Salpimentá y sumá una pizca de nuez moscada.","En una fuente, poné una capa fina de boloñesa. Cubrí con tapas de lasaña.","Repetí capas: boloñesa, un poco de salsa blanca, muzzarella, tapas. Terminá con salsa blanca y queso rallado arriba.","Horneá 25-30 minutos hasta que esté dorada y burbujeante. Dejá reposar 10 min antes de cortar (así no se desarma)."],"resultado":"Lasaña firme al cortar, con capas visibles y la superficie gratinada. No debe quedar líquida.","reuso":"Aprovecha la misma boloñesa de la semana. Si sobra porción, al día siguiente es un almuerzo listo.","tips":["Las tapas precocidas se ablandan solas en el horno con la humedad de la salsa.","Reposar antes de cortar es la clave para que salga en porciones prolijas."],"rinde":2},{"id":"tarta-pollo","nombre":"Tarta de pollo y verduras","emoji":"🥧","tags":["Favorita","Tartas","Reusa pollo"],"proteina":"Pollo","comida":"almuerzo","tiempo":"35 min","dificultad":"Fácil","porciones":"2 (rinde 3-4)","batch":true,"equipo":["Horno"],"ingredientes":[{"item":"Pollo desmenuzado ya hecho","cant":"2 tazas","rubro":"reuso","escalable":false,"reuso":true},{"item":"Tapas de tarta","cant":"2","rubro":"almacen","num":2,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Morrón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Arvejas (opcional)","cant":"1/2 taza","rubro":"almacen","num":0.5,"escalable":true,"unidad":"taza"},{"item":"Huevos","cant":"2","rubro":"lacteos","num":2,"escalable":true},{"item":"Queso rallado o muzzarella","cant":"100 g","rubro":"lacteos","num":100,"escalable":true,"unidad":"g"},{"item":"Aceite","cant":"1 cda","rubro":"almacen","num":1,"escalable":true,"unidad":"cda"},{"item":"Sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C. Forrá una tartera con una tapa de tarta.","En una sartén con aceite, rehogá la cebolla, el morrón y la zanahoria picados chicos, 6-8 min hasta que estén blandos.","En un bol, mezclá las verduras rehogadas, el pollo desmenuzado, las arvejas, el queso, los huevos, sal y pimienta.","Volcá el relleno sobre la masa. Cubrí con la segunda tapa y cerrá los bordes apretando con un tenedor.","Pinchá la superficie con el tenedor (para que no se infle) y horneá 25-30 min hasta que esté dorada."],"resultado":"Tarta dorada y firme, que se corta en porciones sin desarmarse. Relleno jugoso pero no líquido.","reuso":"Usa el pollo desmenuzado que cocinaste. Con la misma tanda de pollo hacés después tacos o quesadillas.","tips":["Pinchar la masa evita que se levante.","Fría o tibia queda igual de rica: ideal para llevar."],"rinde":2},{"id":"tacos-pollo","nombre":"Tacos de pollo saludables","emoji":"🌮","tags":["Favorita","Tacos","Reusa pollo","Rápida"],"proteina":"Pollo","comida":"almuerzo","tiempo":"20 min","dificultad":"Muy fácil","porciones":"2","batch":false,"equipo":["Sartén"],"ingredientes":[{"item":"Pollo desmenuzado ya hecho","cant":"1.5 tazas","rubro":"reuso","escalable":false,"reuso":true},{"item":"Tortillas de trigo o maíz","cant":"6","rubro":"almacen","num":6,"escalable":true},{"item":"Tomate","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Palta","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Cebolla morada","cant":"1/2","rubro":"verduleria","num":0.5,"escalable":true},{"item":"Limón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Queso rallado","cant":"100 g","rubro":"lacteos","num":100,"escalable":true,"unidad":"g"},{"item":"Comino y pimentón","cant":"1 cdita c/u","rubro":"almacen","escalable":false},{"item":"Aceite","cant":"1 cda","rubro":"almacen","num":1,"escalable":true,"unidad":"cda"},{"item":"Sal","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Calentá el pollo desmenuzado en una sartén con el aceite, el comino y el pimentón, 3-4 min. Salá.","Picá el tomate y la cebolla morada. Pisá la palta con un poco de limón y sal (guacamole rápido).","Entibiá las tortillas unos segundos en una sartén seca o en el microondas.","Armá cada taco con pollo, tomate, guacamole, cebolla y queso."],"resultado":"Tacos tibios, jugosos y coloridos, para armar en la mesa. Frescos por las verduras, sabrosos por las especias.","reuso":"Cierra el ciclo del pollo desmenuzado de la semana. Si sobró pollo, guardalo para quesadillas.","tips":["La palta se oxida: pisala justo antes de comer y con limón.","Si preferís caliente sin frío, salteá el tomate junto al pollo."],"rinde":2},{"id":"quesadillas","nombre":"Quesadillas de pollo y verduras","emoji":"🫓","tags":["Reusa pollo","Rápida"],"proteina":"Pollo","comida":"almuerzo","tiempo":"20 min","dificultad":"Muy fácil","porciones":"2","batch":false,"equipo":["Sartén","Air fryer"],"ingredientes":[{"item":"Pollo desmenuzado ya hecho","cant":"1 taza","rubro":"reuso","escalable":false,"reuso":true},{"item":"Tortillas de trigo","cant":"4","rubro":"almacen","num":4,"escalable":true},{"item":"Muzzarella o queso","cant":"200 g","rubro":"lacteos","num":200,"escalable":true,"unidad":"g"},{"item":"Morrón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite","cant":"1 cda","rubro":"almacen","num":1,"escalable":true,"unidad":"cda"},{"item":"Sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Rehogá la cebolla y el morrón picados en una sartén con aceite, 5-6 min. Mezclá con el pollo.","Sobre una tortilla, poné queso, la mezcla de pollo y más queso (el queso 'pega' la quesadilla). Tapá con otra tortilla.","Cociná en sartén seca a fuego medio 2-3 min de cada lado, hasta que se dore y el queso se funda. (En air fryer: 6-7 min a 180°C.)","Cortá en triángulos y serví."],"resultado":"Quesadilla dorada y crocante por fuera, con el queso fundido que une el relleno. Se corta en gajos sin desarmarse.","reuso":"Otra salida para el pollo desmenuzado. Ideal para el último día de la semana.","tips":["Poco relleno = se cierra mejor y no se cae.","Apretala con la espátula al dar vuelta."],"rinde":2},{"id":"merluza-horno","nombre":"Merluza al horno con vegetales","emoji":"🐟","tags":["Pescado","Al horno","Liviana"],"proteina":"Merluza","comida":"cena","tiempo":"35 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Horno"],"ingredientes":[{"item":"Filetes de merluza","cant":"2 (~400 g)","rubro":"carniceria","num":2,"escalable":true,"notag":400},{"item":"Papa","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Calabaza","cant":"1/2 chica","rubro":"verduleria","num":0.5,"escalable":true,"nota":"chica"},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Tomate","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Limón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite de oliva","cant":"2 cdas","rubro":"almacen","num":2,"escalable":true,"unidad":"cda"},{"item":"Ajo, sal, pimienta, orégano","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C. Cortá la papa, la calabaza y la cebolla en rodajas finas.","Distribuí los vegetales en una fuente aceitada, salá y horneá 15 min para que empiecen a ablandarse (van más lento que el pescado).","Acomodá los filetes de merluza sobre los vegetales. Rociá con aceite, jugo de limón, ajo picado, sal, pimienta y orégano. Sumá rodajas de tomate arriba.","Volvé al horno 12-15 min. La merluza está lista cuando la carne se ve opaca y se desarma fácil con el tenedor."],"resultado":"Pescado blanco y jugoso que se deshace en láminas, sobre una cama de vegetales tiernos y dorados.","reuso":"Si sobran vegetales asados, al día siguiente son guarnición o relleno de tortilla.","tips":["El pescado se cocina rápido: por eso los vegetales van primero.","Sin espinas: pasá el dedo antes de cocinar y retirá si encontrás alguna."],"rinde":2},{"id":"tilapia-airfryer","nombre":"Tilapia a la air fryer con puré de calabaza","emoji":"🍤","tags":["Pescado","Air fryer","Liviana"],"proteina":"Tilapia","comida":"cena","tiempo":"30 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Air fryer","Olla"],"ingredientes":[{"item":"Filetes de tilapia","cant":"2 (~400 g)","rubro":"carniceria","num":2,"escalable":true,"notag":400},{"item":"Calabaza","cant":"1 chica","rubro":"verduleria","num":1,"escalable":true,"nota":"chica"},{"item":"Pan rallado","cant":"1/2 taza","rubro":"almacen","num":0.5,"escalable":true,"unidad":"taza"},{"item":"Limón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Manteca","cant":"1 cda","rubro":"lacteos","num":1,"escalable":true,"unidad":"cda"},{"item":"Aceite en spray","cant":"c/n","rubro":"almacen","escalable":false},{"item":"Ajo, sal, pimienta, pimentón","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Pelá y cortá la calabaza en cubos. Herví en agua con sal 15 min hasta que se pinche fácil. Colá, pisá con la manteca, sal y pimienta.","Secá los filetes con papel de cocina. Salpimentá y espolvoreá pimentón y ajo.","Pasá los filetes por pan rallado apretando. Rociá con aceite en spray.","Cociná en la air fryer a 190°C, 8-10 min, hasta que estén dorados y la carne se desarme fácil. Serví con el puré de calabaza y jugo de limón."],"resultado":"Tilapia dorada por fuera y jugosa por dentro. Puré de calabaza dulce y sedoso.","reuso":"El puré de calabaza sobrante sirve de base para una crema al día siguiente (agregale caldo y licuá).","tips":["Secar bien el pescado = más crocante.","No amontones los filetes en la air fryer: cociná en tandas si hace falta."],"rinde":2},{"id":"hamburguesas","nombre":"Hamburguesas caseras con papas rústicas","emoji":"🍔","tags":["Favorita","Hamburguesas","Air fryer"],"proteina":"Carne vacuna","comida":"cena","tiempo":"35 min","dificultad":"Fácil","porciones":"2 (rinde 4 medallones)","batch":true,"equipo":["Air fryer","Sartén","Horno"],"ingredientes":[{"item":"Carne picada","cant":"500 g","rubro":"carniceria","num":500,"escalable":true,"unidad":"g"},{"item":"Huevo","cant":"1","rubro":"lacteos","num":1,"escalable":true},{"item":"Pan rallado","cant":"3 cdas","rubro":"almacen","num":3,"escalable":true,"unidad":"cda"},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Papas","cant":"4 grandes","rubro":"verduleria","num":4,"escalable":true,"nota":"grandes"},{"item":"Pan de hamburguesa","cant":"2-4","rubro":"almacen","num":2,"escalable":true,"num2":4},{"item":"Queso en fetas","cant":"4","rubro":"lacteos","num":4,"escalable":true},{"item":"Tomate y lechuga","cant":"a gusto","rubro":"verduleria","escalable":false},{"item":"Aceite, sal, pimienta, pimentón","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Papas rústicas: cortá las papas en gajos (con cáscara lavada). Mezclá con aceite, sal y pimentón. Air fryer 200°C, 18-20 min sacudiendo a la mitad (o horno 220°C, 30 min).","Rallá o picá muy fino la cebolla. Mezclá con la carne, el huevo, el pan rallado, sal y pimienta. Amasá apenas.","Formá 4 medallones parejos, un poco más anchos que el pan (encogen al cocinar).","Cociná en sartén o air fryer (190°C) 4-5 min de cada lado. En el último minuto poné el queso arriba para que se funda.","Armá las hamburguesas con pan, medallón, queso, tomate y lechuga. Serví con las papas."],"resultado":"Medallones jugosos y bien dorados por fuera, cocidos por dentro. Papas crocantes afuera y tiernas adentro.","reuso":"Hacé 4 medallones aunque cenen 2: los 2 que sobran, cocidos, son un almuerzo al día siguiente (en pan o con puré).","tips":["No apretar de más la carne = hamburguesa más jugosa.","Un pocito hundido en el centro del medallón evita que se infle."],"rinde":2},{"id":"tortilla-papa","nombre":"Tortilla de papa","emoji":"🍳","tags":["Huevos","Económica","Rápida"],"proteina":"Huevos","comida":"cena","tiempo":"30 min","dificultad":"Fácil","porciones":"2 (rinde 3)","batch":false,"equipo":["Sartén"],"ingredientes":[{"item":"Papas","cant":"4 medianas","rubro":"verduleria","num":4,"escalable":true,"nota":"medianas"},{"item":"Huevos","cant":"5","rubro":"lacteos","num":5,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite","cant":"3 cdas","rubro":"almacen","num":3,"escalable":true,"unidad":"cda"},{"item":"Sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Pelá y cortá las papas en láminas finas y la cebolla en pluma.","En una sartén con el aceite, cociná las papas y la cebolla a fuego medio-bajo, tapadas, 12-15 min hasta que estén blandas (remové cada tanto). No tienen que dorarse mucho.","Batí los huevos con sal y pimienta en un bol. Sumá las papas escurridas del aceite y mezclá. Dejá reposar 2 min.","En la misma sartén con una cucharada de aceite, volcá la mezcla. Cociná a fuego medio-bajo 4-5 min hasta que cuaje abajo.","Dá vuelta con la ayuda de un plato y cociná 3-4 min del otro lado. El centro debe quedar cocido (firme, no líquido)."],"resultado":"Tortilla firme y dorada por fuera, cocida y jugosa por dentro. Se corta en porciones sin desarmarse.","reuso":"Fría es una vianda ideal. Sobrante = almuerzo del día siguiente entre pan o con ensalada tibia.","tips":["Fuego bajo y paciencia: es el secreto para que no se queme afuera y quede cruda adentro.","Usá un plato más grande que la sartén para darla vuelta sin drama."],"rinde":2},{"id":"pastel-carne","nombre":"Pastel de carne (con puré arriba)","emoji":"🥘","tags":["Favorita","Al horno","Carne"],"proteina":"Carne vacuna","comida":"cena","tiempo":"45 min","dificultad":"Fácil","porciones":"2 (rinde 3-4)","batch":true,"equipo":["Horno","Olla"],"ingredientes":[{"item":"Carne picada","cant":"500 g","rubro":"carniceria","num":500,"escalable":true,"unidad":"g"},{"item":"Papas","cant":"1 kg","rubro":"verduleria","num":1000,"escalable":true,"unidad":"g"},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Morrón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Extracto o salsa de tomate","cant":"2 cdas","rubro":"almacen","num":2,"escalable":true,"unidad":"cda"},{"item":"Huevo duro (opcional)","cant":"2","rubro":"lacteos","num":2,"escalable":true},{"item":"Leche y manteca","cant":"1/2 taza + 1 cda","rubro":"lacteos","num":0.5,"escalable":true,"unidad":"taza","nota":"+ 1 cda"},{"item":"Queso rallado","cant":"3 cdas","rubro":"lacteos","num":3,"escalable":true,"unidad":"cda"},{"item":"Aceite, sal, pimienta, comino","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Puré: herví las papas peladas 15-18 min, pisá con leche tibia, manteca, sal y pimienta.","Relleno: rehogá cebolla, zanahoria y morrón picados en aceite 6-8 min. Sumá la carne y cociná hasta que no quede roja. Agregá el tomate, comino, sal y pimienta.","En una fuente, poné el relleno de carne parejo. Si querés, distribuí rodajas de huevo duro.","Cubrí con el puré, alisá con un tenedor (marcá líneas) y espolvoreá queso rallado.","Horno 200°C, 20-25 min hasta que la superficie esté dorada."],"resultado":"Base de carne jugosa y sabrosa, tapa de puré dorada y con relieve crocante. Se sirve en porciones tipo lasaña.","reuso":"Rinde para 3-4: una porción sobrante es almuerzo listo. También podés usar la boloñesa de la semana como relleno para ir más rápido.","tips":["Marcá el puré con el tenedor: los relieves se doran y quedan lindos.","Dejá reposar 10 min antes de servir."],"rinde":2},{"id":"pollo-horno","nombre":"Pollo al horno con papa y boniato","emoji":"🍗","tags":["Favorita","Al horno","Pollo"],"proteina":"Pollo","comida":"cena","tiempo":"55 min","dificultad":"Muy fácil","porciones":"2 (rinde 3)","batch":true,"equipo":["Horno"],"ingredientes":[{"item":"Presas de pollo (muslos/pata muslo)","cant":"6 presas","rubro":"carniceria","num":6,"escalable":true,"unidad":"presa"},{"item":"Papas","cant":"3","rubro":"verduleria","num":3,"escalable":true},{"item":"Boniato","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Limón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite de oliva","cant":"2 cdas","rubro":"almacen","num":2,"escalable":true,"unidad":"cda"},{"item":"Ajo, romero/orégano, sal, pimienta, pimentón","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C. Cortá papa, boniato y cebolla en trozos parejos y ponelos en una fuente grande.","Acomodá las presas de pollo sobre las verduras. Condimentá todo con aceite, ajo, jugo de limón, pimentón, sal, pimienta y hierbas.","Horneá 45-50 min. A la mitad, dá vuelta las presas para que se doren parejo.","Está listo cuando el pollo está dorado y, al pinchar, el jugo sale transparente (no rosado). Las papas y boniatos, tiernos."],"resultado":"Pollo dorado y crocante por fuera, jugoso por dentro, con guarnición caramelizada de papa y boniato.","reuso":"Cociná 6 presas: las que sobran, desmenuzadas, sirven para tacos o quesadillas al día siguiente. Guardá los jugos de la fuente para humedecer.","tips":["Trozos parejos = cocción pareja.","Si el pollo se dora antes que las papas, tapá con papel aluminio y seguí horneando."],"rinde":2},{"id":"wok-pollo","nombre":"Salteado de pollo con verduras y arroz","emoji":"🥢","tags":["Pollo","Arrocera","Rápida"],"proteina":"Pollo","comida":"cena","tiempo":"30 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Arrocera","Sartén"],"ingredientes":[{"item":"Pechuga de pollo en cubos","cant":"400 g","rubro":"carniceria","num":400,"escalable":true,"unidad":"g"},{"item":"Arroz","cant":"1.5 tazas","rubro":"almacen","num":1.5,"escalable":true,"unidad":"taza"},{"item":"Morrón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Zucchini o chauchas","cant":"1 taza","rubro":"verduleria","num":1,"escalable":true,"unidad":"taza"},{"item":"Salsa de soja","cant":"3 cdas","rubro":"almacen","num":3,"escalable":true,"unidad":"cda"},{"item":"Ajo y jengibre (opcional)","cant":"a gusto","rubro":"verduleria","escalable":false},{"item":"Aceite","cant":"2 cdas","rubro":"almacen","num":2,"escalable":true,"unidad":"cda"}],"pasos":["Poné el arroz en la arrocera con agua (según medida de la arrocera) y dejalo cocinar mientras hacés el salteado.","Cortá todas las verduras en tiras finas y el pollo en cubos.","En una sartén grande o wok bien caliente con aceite, salteá el pollo hasta que se dore y esté cocido (5-6 min). Retiralo.","En la misma sartén, salteá las verduras 4-5 min: tienen que quedar tiernas pero con un poco de firmeza.","Volvé a poner el pollo, sumá la salsa de soja (y ajo/jengibre) y salteá 1-2 min más. Serví sobre el arroz."],"resultado":"Pollo dorado y verduras coloridas y crocantes, con el brillo de la salsa de soja. Arroz suelto de guarnición.","reuso":"Cociná arroz de más en la arrocera: sirve para el bowl de atún o como guarnición otro día.","tips":["Fuego fuerte y movimiento constante = verduras que no se hacen puré.","Tené todo cortado antes de prender el fuego: va rápido."],"rinde":2},{"id":"camarones-ajillo","nombre":"Camarones al ajillo con arroz","emoji":"🦐","tags":["Mariscos","Arrocera","Rápida"],"proteina":"Camarones","comida":"cena","tiempo":"25 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Arrocera","Sartén"],"ingredientes":[{"item":"Camarones/langostinos limpios","cant":"400 g","rubro":"carniceria","num":400,"escalable":true,"unidad":"g"},{"item":"Arroz","cant":"1.5 tazas","rubro":"almacen","num":1.5,"escalable":true,"unidad":"taza"},{"item":"Diente de ajo","cant":"4","rubro":"verduleria","num":4,"escalable":true},{"item":"Perejil","cant":"1 puñado","rubro":"verduleria","num":1,"escalable":true,"nota":"puñado"},{"item":"Limón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite de oliva","cant":"3 cdas","rubro":"almacen","num":3,"escalable":true,"unidad":"cda"},{"item":"Ají molido (opcional)","cant":"1 pizca","rubro":"almacen","escalable":false},{"item":"Sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Cociná el arroz en la arrocera.","Si los camarones están congelados, descongelalos y secalos bien con papel.","En una sartén con el aceite de oliva, dorá el ajo picado a fuego medio (sin quemarlo, 1 min). Sumá el ají molido.","Agregá los camarones y cociná 3-4 min, hasta que se pongan rosados/opacos y firmes. No los pases de cocción (se ponen gomosos).","Apagá el fuego, sumá el perejil picado y un chorrito de limón. Serví sobre el arroz."],"resultado":"Camarones rosados, jugosos y perfumados a ajo, con el aceite lleno de sabor para mojar el arroz.","reuso":"Usá arroz de la arrocera que también sirve para otra comida. El aceite de ajo sobrante da sabor a unos vegetales salteados.","tips":["Los camarones se cocinan en minutos: en cuanto están rosados y curvados, listos.","Secarlos bien evita que 'hiervan' en vez de dorarse."],"rinde":2},{"id":"crema-calabaza","nombre":"Crema de calabaza y zanahoria","emoji":"🥣","tags":["Favorita","Cremas y sopas","Liviana","Suave"],"proteina":"Verduras","comida":"almuerzo","tiempo":"30 min","dificultad":"Muy fácil","porciones":"2 (rinde 3)","batch":true,"equipo":["Olla","Licuadora"],"ingredientes":[{"item":"Calabaza","cant":"1 mediana","rubro":"verduleria","num":1,"escalable":true,"nota":"mediana"},{"item":"Zanahoria","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Papa","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Caldo de verduras o de pollo","cant":"1 litro","rubro":"almacen","num":1000,"escalable":true,"unidad":"ml"},{"item":"Queso crema (opcional)","cant":"2 cdas","rubro":"lacteos","num":2,"escalable":true,"unidad":"cda"},{"item":"Aceite de oliva, sal, pimienta, nuez moscada","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Pelá y cortá en cubos la calabaza, la zanahoria, la papa y la cebolla.","En una olla con un chorrito de aceite, rehogá la cebolla 3 min. Sumá el resto de las verduras y el caldo hasta cubrir.","Cociná 20 min, hasta que todo esté bien tierno (se pincha sin resistencia).","Licuá (con licuadora o mixer) hasta que quede bien liso. Sumá el queso crema, ajustá sal, pimienta y una pizca de nuez moscada.","Si quedó muy espesa, agregá un poco más de caldo; si quedó fina, cociná unos minutos más destapada."],"resultado":"Crema sedosa, anaranjada y sin grumos, de sabor dulce y suave. Reconfortante y muy fácil de comer.","reuso":"Rinde para 3: guardá una porción para otro almuerzo. Sumándole pollo desmenuzado se vuelve un plato completo.","tips":["Para más proteína, serví con un huevo poché o pollo desmenuzado.","Se congela perfecto en porciones."],"rinde":2},{"id":"crema-verduras","nombre":"Crema de verduras (zapallo, puerro y zanahoria)","emoji":"🍵","tags":["Cremas y sopas","Liviana","Suave"],"proteina":"Verduras","comida":"almuerzo","tiempo":"30 min","dificultad":"Muy fácil","porciones":"2 (rinde 3)","batch":true,"equipo":["Olla","Licuadora"],"ingredientes":[{"item":"Zapallo o calabaza","cant":"1/2","rubro":"verduleria","num":0.5,"escalable":true},{"item":"Puerro","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Zanahoria","cant":"2","rubro":"verduleria","num":2,"escalable":true},{"item":"Papa","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Apio (opcional)","cant":"1 tallo","rubro":"verduleria","num":1,"escalable":true,"unidad":"tallo"},{"item":"Caldo de verduras","cant":"1 litro","rubro":"almacen","num":1000,"escalable":true,"unidad":"ml"},{"item":"Aceite de oliva, sal, pimienta","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Lavá y cortá todas las verduras en trozos.","Rehogá el puerro en una olla con aceite 3 min. Sumá el resto y el caldo hasta cubrir.","Cociná 20 min hasta que estén tiernas. Licuá hasta que quede lisa.","Ajustá sal y pimienta. Serví con un hilo de aceite de oliva."],"resultado":"Crema lisa y cálida, de color dorado, sabor suave y reconfortante.","reuso":"Guardá una porción para otro día. Base perfecta para sumarle fideos finos o pollo.","tips":["Un toque de queso rallado arriba suma sabor.","Con pan tostado se vuelve una comida completa."],"rinde":2},{"id":"sopa-pollo","nombre":"Sopa/guiso de pollo con fideos y verduras","emoji":"🍜","tags":["Cremas y sopas","Reusa pollo","Reconfortante"],"proteina":"Pollo","comida":"almuerzo","tiempo":"25 min","dificultad":"Muy fácil","porciones":"2 (rinde 3)","batch":true,"equipo":["Olla"],"ingredientes":[{"item":"Pollo desmenuzado ya hecho","cant":"1.5 tazas","rubro":"reuso","escalable":false,"reuso":true},{"item":"Caldo de pollo (de tu preparación)","cant":"1.2 litros","rubro":"reuso","escalable":false,"reuso":true},{"item":"Fideos finos (cabello/municiones)","cant":"1 taza","rubro":"almacen","num":1,"escalable":true,"unidad":"taza"},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Apio (opcional)","cant":"1 tallo","rubro":"verduleria","num":1,"escalable":true,"unidad":"tallo"},{"item":"Papa","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Aceite, sal, pimienta, perejil","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Rehogá la cebolla, la zanahoria y el apio picados en una olla con aceite, 5 min.","Sumá el caldo y la papa en cubos. Cociná 10 min.","Agregá los fideos y el pollo desmenuzado. Cociná 5-6 min más, hasta que los fideos estén tiernos.","Ajustá sal, sumá perejil y serví bien caliente."],"resultado":"Sopa sustanciosa con trozos de pollo y verduras, caldo sabroso y fideos tiernos. Un plato-abrigo.","reuso":"Aprovecha el pollo desmenuzado y el caldo que guardaste. Cero desperdicio.","tips":["Si te gusta más espesa, sumá más fideos o un poco de arroz.","Agregá los fideos al final para que no se pasen."],"rinde":2},{"id":"zapallitos-rellenos","nombre":"Calabaza (o zapallitos) rellenos con carne","emoji":"🎃","tags":["Al horno","Carne","Verduras"],"proteina":"Carne vacuna","comida":"cena","tiempo":"50 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Horno"],"ingredientes":[{"item":"Calabacines/zapallitos redondos o calabaza chica","cant":"2-4","rubro":"verduleria","num":2,"escalable":true,"num2":4},{"item":"Carne picada","cant":"400 g","rubro":"carniceria","num":400,"escalable":true,"unidad":"g"},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Morrón","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Tomate","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Queso rallado o muzzarella","cant":"150 g","rubro":"lacteos","num":150,"escalable":true,"unidad":"g"},{"item":"Aceite, sal, pimienta, comino","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C. Cortá los zapallitos por la mitad y ahuecalos con una cuchara (reservá la pulpa). Si usás calabaza, cocinala 15 min al horno primero para ablandarla.","Rehogá cebolla, morrón y la pulpa picada en aceite 6 min. Sumá la carne y cociná hasta que no quede roja. Agregá el tomate picado, comino, sal y pimienta.","Rellená los zapallitos con la carne. Cubrí con queso.","Horneá 20-25 min hasta que el zapallito esté tierno y el queso dorado."],"resultado":"Verdura tierna rellena de carne sabrosa y jugosa, con queso gratinado arriba. Bonito y completo.","reuso":"Si sobra relleno de carne, guardalo: rinde para unos tacos o para rellenar una tortilla.","tips":["Ahuecá sin romper las paredes.","La pulpa no se tira: va al relleno."],"rinde":2},{"id":"tarta-calabaza","nombre":"Tarta de calabaza y queso","emoji":"🧡","tags":["Tartas","Verduras","Vegetariana"],"proteina":"Huevos","comida":"almuerzo","tiempo":"45 min","dificultad":"Fácil","porciones":"2 (rinde 3-4)","batch":true,"equipo":["Horno"],"ingredientes":[{"item":"Calabaza","cant":"1 mediana","rubro":"verduleria","num":1,"escalable":true,"nota":"mediana"},{"item":"Tapa de tarta","cant":"1-2","rubro":"almacen","num":1,"escalable":true,"num2":2},{"item":"Cebolla","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Huevos","cant":"2","rubro":"lacteos","num":2,"escalable":true},{"item":"Queso rallado","cant":"100 g","rubro":"lacteos","num":100,"escalable":true,"unidad":"g"},{"item":"Muzzarella (opcional)","cant":"100 g","rubro":"lacteos","num":100,"escalable":true,"unidad":"g"},{"item":"Aceite, sal, pimienta, nuez moscada","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Pelá y cortá la calabaza en cubos. Cocinala al horno o hervida 15-18 min hasta que esté tierna. Pisala.","Rehogá la cebolla en aceite 5 min y mezclala con la calabaza pisada.","Sumá los huevos, el queso rallado, sal, pimienta y nuez moscada. Mezclá bien.","Forrá la tartera con la masa, volcá el relleno y, si querés, cubrí con muzzarella.","Horno 200°C, 30 min hasta que esté firme y dorada."],"resultado":"Relleno cremoso y anaranjado, firme al cortar, con base de masa cocida. Suave y sabrosa.","reuso":"Rinde para 3-4: porción fría = vianda o almuerzo del día siguiente.","tips":["Escurrí bien la calabaza para que el relleno no quede aguado.","Sin la tapa de arriba queda más liviana."],"rinde":2},{"id":"merluza-milanesa","nombre":"Milanesas de merluza al horno con puré","emoji":"🐠","tags":["Pescado","Milanesas","Al horno"],"proteina":"Merluza","comida":"cena","tiempo":"35 min","dificultad":"Fácil","porciones":"2","batch":false,"equipo":["Horno","Air fryer"],"ingredientes":[{"item":"Filetes de merluza","cant":"4 (~500 g)","rubro":"carniceria","num":4,"escalable":true,"notag":500},{"item":"Huevos","cant":"2","rubro":"lacteos","num":2,"escalable":true},{"item":"Pan rallado","cant":"1.5 tazas","rubro":"almacen","num":1.5,"escalable":true,"unidad":"taza"},{"item":"Papas","cant":"800 g","rubro":"verduleria","num":800,"escalable":true,"unidad":"g"},{"item":"Leche y manteca","cant":"1/2 taza + 1 cda","rubro":"lacteos","num":0.5,"escalable":true,"unidad":"taza","nota":"+ 1 cda"},{"item":"Limón, ajo, perejil, sal, pimienta","cant":"a gusto","rubro":"verduleria","escalable":false},{"item":"Aceite en spray","cant":"c/n","rubro":"almacen","escalable":false}],"pasos":["Precalentá el horno a 200°C. Secá bien los filetes con papel.","Batí los huevos con ajo, perejil, sal y pimienta. Pasá los filetes por huevo y luego por pan rallado, apretando.","Acomodá en bandeja con aceite en spray y horneá 12-15 min (o air fryer 190°C, 10 min), hasta dorar. La carne debe verse opaca.","Puré: herví las papas 15-18 min, pisá con leche tibia y manteca, salpimentá.","Serví las milanesas de merluza con puré y jugo de limón."],"resultado":"Milanesas de pescado doradas y crocantes, tiernas por dentro. Una forma rica de comer pescado, muy aceptada.","reuso":"El puré sobrante se recalienta con un chorrito de leche.","tips":["Secar bien el pescado antes de empanar = mejor adherencia y más crocante.","Con un poco de limón levanta todo el sabor."],"rinde":2},{"id":"bowl-atun","nombre":"Bowl de arroz con atún y vegetales","emoji":"🍚","tags":["Atún","Rápida","Reusa arroz"],"proteina":"Atún","comida":"almuerzo","tiempo":"20 min","dificultad":"Muy fácil","porciones":"2","batch":false,"equipo":["Arrocera","Sartén"],"ingredientes":[{"item":"Atún al natural en lata","cant":"2 latas","rubro":"almacen","num":2,"escalable":true,"unidad":"lata"},{"item":"Arroz cocido (o 1.5 tazas de arroz)","cant":"para 2","rubro":"reuso","escalable":false,"reuso":true},{"item":"Zanahoria","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Choclo","cant":"1/2 lata","rubro":"almacen","num":0.5,"escalable":true,"unidad":"lata"},{"item":"Tomate","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Palta","cant":"1","rubro":"verduleria","num":1,"escalable":true},{"item":"Huevo duro","cant":"2","rubro":"lacteos","num":2,"escalable":true},{"item":"Aceite de oliva, limón, sal","cant":"a gusto","rubro":"almacen","escalable":false}],"pasos":["Si no tenés arroz cocido, cocinalo en la arrocera. Herví los huevos 10 min y pelalos.","Rallá o cortá fina la zanahoria y salteala 3-4 min (o usala cruda rallada).","Armá el bowl: base de arroz tibio, atún escurrido, zanahoria, choclo, tomate, palta y huevo duro en gajos.","Aliñá con aceite de oliva, limón y sal."],"resultado":"Bowl colorido y completo, tibio y fresco a la vez. Saciante y liviano.","reuso":"Aprovecha arroz cocido de otro día. Se arma en minutos.","tips":["Usá atún al natural (menos grasa).","Tibio entra mejor que frío, y se arma en minutos."],"rinde":2}],"rubros":{"verduleria":"Verdulería","carniceria":"Carnicería y Pescadería","lacteos":"Lácteos y huevos","almacen":"Almacén","reuso":"De una preparación tuya (no comprar)"},"usaBase":{"pasta-bolonesa":["bolonesa"],"lasana":["bolonesa"],"milanesas-napolitana":["milanesas-pollo"],"tarta-pollo":["pollo-desmenuzado"],"tacos-pollo":["pollo-desmenuzado"],"quesadillas":["pollo-desmenuzado"],"sopa-pollo":["pollo-desmenuzado"]},"semana1":{"nombre":"Semana 1","dias":[{"dia":"Lunes","almuerzo":{"receta":"crema-calabaza","quien":"Solo 1 persona","porciones":1},"cena":{"receta":"milanesas-pollo","quien":"Ambos","porciones":2}},{"dia":"Martes","almuerzo":{"receta":"milanesas-napolitana","quien":"Ambos","porciones":2},"cena":{"receta":"pasta-bolonesa","quien":"Ambos","porciones":2}},{"dia":"Miércoles","almuerzo":{"receta":"sopa-pollo","quien":"Solo 1 persona","porciones":1},"cena":{"receta":"lasana","quien":"Ambos","porciones":2}},{"dia":"Jueves","almuerzo":{"receta":"tarta-pollo","quien":"Ambos","porciones":2},"cena":{"receta":"merluza-horno","quien":"Ambos","porciones":2}},{"dia":"Viernes","almuerzo":{"receta":"tacos-pollo","quien":"Ambos","porciones":2},"cena":{"receta":"hamburguesas","quien":"Ambos","porciones":2}}],"compra":{"verduleria":["Calabaza — 2 (crema + guarniciones)","Zanahoria — 6","Cebolla — 6","Papa — 3 kg (puré, guarniciones, papas rústicas)","Boniato — 0 (opcional)","Morrón — 2","Tomate — 4","Palta — 1","Cebolla morada — 1","Limón — 2","Lechuga — 1 planta","Ajo — 1 cabeza","Perejil — 1 atado"],"carniceria":["Pechuga de pollo — 1.5 kg (milanesas + pollo desmenuzado)","Carne picada — 1.2 kg (boloñesa grande + hamburguesas)","Filetes de merluza — 400 g"],"lacteos":["Huevos — 1 docena","Leche — 1 litro","Manteca — 1 pan (200 g)","Muzzarella — 500 g","Queso rallado — 1 paquete","Queso en fetas — 4-6 fetas"],"almacen":["Pan rallado — 1 paquete grande","Tomate triturado — 2 latas","Extracto de tomate — 1","Fideos (mostacholes/spaghetti) — 1 paquete","Tapas de lasaña — 1 caja","Tapas de tarta — 2","Tortillas de trigo o maíz — 1 paquete","Pan de hamburguesa — 4","Aceite / aceite de oliva","Caldo (cubos o casero) — para la crema","Sal, pimienta, orégano, comino, pimentón, laurel"]},"orden":["Domingo o lunes temprano (adelanto clave): cociná la TANDA GRANDE de pollo desmenuzado (2 pechugas) en la arrocera y guardá el caldo aparte. Con eso salen la sopa del miércoles, la tarta del jueves y los tacos del viernes.","Lunes: hacé las 6 milanesas de pollo (comés 2, guardás 4 para el martes) y un puré grande (comés parte y guardás para el martes). Almuerzo: crema de calabaza (rinde para el miércoles si hace falta).","Martes: napolitanas con las milanesas y el puré de ayer (almuerzo rápido). A la noche, cociná la TANDA GRANDE de boloñesa: usás una parte para la pasta y guardás el resto para la lasaña del miércoles.","Miércoles: sopa con el pollo y el caldo (almuerzo). Cena: lasaña con la boloñesa de ayer.","Jueves: tarta de pollo con el pollo desmenuzado (almuerzo). Cena: merluza al horno con vegetales.","Viernes: tacos con el último pollo desmenuzado (almuerzo). Cena: hamburguesas caseras (hacé 4, guardá 2 por si querés un almuerzo extra el finde)."],"conservacion":["Heladera: pollo desmenuzado y boloñesa duran 3 días bien tapados. Milanesas cocidas, 2-3 días.","Freezer: boloñesa, crema y pollo desmenuzado se congelan hasta 3 meses en porciones. Etiquetá con la fecha.","Recalentado: microondas para purés y cremas (con un chorrito de leche o caldo); horno o air fryer para milanesas y tartas (recuperan lo crocante).","Pescado: cocinalo el mismo día que lo comprás o congelalo. No lo dejes más de 1 día en la heladera.","Siempre recalentá las sobras hasta que humeen (bien calientes)."]},"canon":{"Papas":"Papa","Huevo":"Huevos","Muzzarella o queso para gratinar":"Muzzarella","Muzzarella (opcional)":"Muzzarella","Queso rallado o muzzarella":"Queso rallado","Pechugas de pollo fileteadas para milanesa":"Pechuga de pollo","Pechugas de pollo":"Pechuga de pollo","Pechuga de pollo en cubos":"Pechuga de pollo","Zapallo o calabaza":"Calabaza","Calabacines/zapallitos redondos o calabaza chica":"Zapallitos o calabaza","Salsa de tomate o boloñesa":"Salsa de tomate","Fideos (spaghetti, mostacholes)":"Fideos","Fideos finos (cabello/municiones)":"Fideos finos"},"stapleWords":["sal","pimienta","aceite","orégano","oregano","comino","pimentón","pimenton","nuez moscada","azúcar","azucar","laurel","romero","ají molido","aji molido","jengibre"],"stapleList":["Sal","Pimienta","Aceite","Aceite de oliva","Orégano","Comino","Pimentón","Nuez moscada","Azúcar","Laurel","Ají molido"],"overrideQty":{"Papa":"~3 kg (purés, guarniciones y papas rústicas)","Huevos":"1 docena"}};
+const REC = {}; DATA.recetas.forEach(r=>REC[r.id]=r);
+let PLAN = JSON.parse(JSON.stringify(DATA.semana1));
+const RUBRO_ORDER = ["verduleria","carniceria","lacteos","almacen"];
+let checks = {};
+
+/* ---------- ESTADO / PERSISTENCIA ---------- */
+const LS_KEY='recetario-estado-v2';
+function saveState(){
+  try{
+    const dias=PLAN.dias.map(d=>({almuerzo:{receta:d.almuerzo.receta,porciones:d.almuerzo.porciones},
+                                  cena:{receta:d.cena.receta,porciones:d.cena.porciones}}));
+    localStorage.setItem(LS_KEY,JSON.stringify({dias}));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(!s||!s.dias) return;
+    s.dias.forEach((sd,i)=>{
+      const d=PLAN.dias[i]; if(!d) return;
+      ['almuerzo','cena'].forEach(k=>{
+        if(!sd[k]) return;
+        if(REC[sd[k].receta]) d[k].receta=sd[k].receta;
+        const p=parseInt(sd[k].porciones,10);
+        if(p>=1&&p<=8) d[k].porciones=p;
+      });
+    });
+  }catch(e){}
+}
+function resetSemana(){
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+  PLAN=JSON.parse(JSON.stringify(DATA.semana1));
+  renderAll();
+}
+function renderAll(){ renderWeek(); renderCompra(); renderBooklet(); }
+
+/* ---------- ESCALADO DE CANTIDADES ---------- */
+// Demanda semanal por receta: suma las personas de cada comida que la usa,
+// incluyendo las recetas base (usaBase) que alimentan a otras.
+function demandas(){
+  const dem={};
+  PLAN.dias.forEach(d=>['almuerzo','cena'].forEach(k=>{
+    const s=d[k]; const p=s.porciones||2;
+    dem[s.receta]=(dem[s.receta]||0)+p;
+    (DATA.usaBase[s.receta]||[]).forEach(b=>{ dem[b]=(dem[b]||0)+p; });
+  }));
+  return dem;
+}
+function esBase(id){ const r=REC[id]; return r.batch||Object.values(DATA.usaBase).some(a=>a.includes(id)); }
+// Factor para MOSTRAR una receta: las bases se cocinan una sola vez (demanda total);
+// las comunes se cocinan por comida (personas de esa comida; si está en varias, la mayor).
+function factorDisplay(id){
+  const dem=demandas(); const r=REC[id]; if(!r||!dem[id]) return 1;
+  if(esBase(id)) return dem[id]/r.rinde;
+  let mx=0;
+  PLAN.dias.forEach(d=>['almuerzo','cena'].forEach(k=>{ const s=d[k]; if(s.receta===id) mx=Math.max(mx,s.porciones||2); }));
+  return (mx||r.rinde)/r.rinde;
+}
+function porcionesDisplay(id){
+  const dem=demandas(); const r=REC[id]; if(!dem[id]) return null;
+  if(esBase(id)) return dem[id];
+  let mx=0;
+  PLAN.dias.forEach(d=>['almuerzo','cena'].forEach(k=>{ const s=d[k]; if(s.receta===id) mx=Math.max(mx,s.porciones||2); }));
+  return mx||null;
+}
+function fmtNum(n){
+  const frac={0.25:'1/4',0.5:'1/2',0.75:'3/4'};
+  const ent=Math.floor(n), r=Math.round((n-ent)*100)/100;
+  if(frac[r]) return ent===0?frac[r]:ent+' '+frac[r];
+  const v=Math.round(n*10)/10;
+  return String(v).replace('.',',');
+}
+const PLURAL={cda:'cdas',cdita:'cditas',taza:'tazas',lata:'latas',caja:'cajas',feta:'fetas',presa:'presas',filete:'filetes',tallo:'tallos'};
+function fmtQty(v,unidad){
+  if(unidad==='g'){
+    v=Math.max(10,Math.round(v/10)*10);
+    if(v>=1000) return fmtNum(Math.round(v/50)/20)+' kg';
+    return v+' g';
+  }
+  if(unidad==='ml'){
+    v=Math.max(10,Math.round(v/10)*10);
+    if(v>=1000){ const l=Math.round(v/100)/10; return fmtNum(l)+(l===1?' litro':' litros'); }
+    return v+' ml';
+  }
+  if(!unidad) return fmtNum(Math.max(0.25,Math.round(v*4)/4));
+  const n=Math.max(0.5,['cda','cdita','taza'].includes(unidad)?Math.round(v*2)/2:Math.ceil(v*2)/2);
+  return fmtNum(n)+' '+(n<=1?unidad:(PLURAL[unidad]||unidad+'s'));
+}
+function ingCant(ing,factor){
+  if(!ing.escalable||factor===1) return ing.cant;
+  let s;
+  if(ing.num2!==undefined){
+    const fb=fmtQty(ing.num2*factor,ing.unidad);
+    s=fmtQty(ing.num*factor,ing.unidad).split(' ')[0]+'-'+fb;
+  } else s=fmtQty(ing.num*factor,ing.unidad);
+  if(ing.nota&&!/\d/.test(ing.nota)) s+=' '+(/^[+(]/.test(ing.nota)?ing.nota:'('+ing.nota+')');
+  if(ing.notag) s+=' (~'+fmtQty(ing.notag*factor,'g')+')';
+  return s;
+}
+// Suma real de cantidades para la lista de compras: agrupa por unidad y suma.
+function cantsDe(entries){
+  const esc=entries.filter(e=>e.ing.escalable&&e.ing.num2===undefined);
+  const otros=entries.filter(e=>!e.ing.escalable||e.ing.num2!==undefined);
+  const grupos={};
+  esc.forEach(e=>{ const u=e.ing.unidad||''; (grupos[u]=grupos[u]||[]).push(e); });
+  const parts=[];
+  Object.keys(grupos).forEach(u=>{
+    const g=grupos[u];
+    if(g.length===1){ parts.push(ingCant(g[0].ing,g[0].factor)); return; }
+    parts.push(fmtQty(g.reduce((t,e)=>t+e.ing.num*e.factor,0),u||null));
+  });
+  otros.forEach(e=>{ const c=ingCant(e.ing,e.factor); if(!parts.includes(c)) parts.push(c); });
+  return parts.join(' + ');
+}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('view-'+t.dataset.view).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+/* ---------- WEEK ---------- */
+function mealOptions(sel){
+  return DATA.recetas.filter(r=>r.comida!=='base').map(r=>
+    `<option value="${r.id}" ${r.id===sel?'selected':''}>${r.emoji} ${r.nombre}</option>`).join('');
+}
+function renderWeek(){
+  const g=document.getElementById('weekgrid'); g.innerHTML='';
+  PLAN.dias.forEach((d,di)=>{
+    const col=document.createElement('div'); col.className='daycol';
+    col.innerHTML=`<div class="dayhead">${d.dia}</div>`+
+      ['almuerzo','cena'].map(k=>{
+        const s=d[k]; const r=REC[s.receta]; const p=s.porciones||2;
+        return `<div class="slot">
+          <div class="lbl">${k==='almuerzo'?'🥗 Almuerzo':'🌙 Cena'}</div>
+          <div class="meal" onclick="openModal('${s.receta}')"><span class="emoji">${r.emoji}</span>${r.nombre}</div>
+          <div class="pers">
+            <button onclick="chgPers(${di},'${k}',-1)" ${p<=1?'disabled':''} aria-label="Menos personas">−</button>
+            <span>👥 ${p===1?'1 persona':p+' personas'}</span>
+            <button onclick="chgPers(${di},'${k}',1)" ${p>=8?'disabled':''} aria-label="Más personas">+</button>
+          </div>
+          <select onchange="changeMeal(${di},'${k}',this.value)">${mealOptions(s.receta)}</select>
+        </div>`;
+      }).join('');
+    g.appendChild(col);
+  });
+  renderOrden();
+}
+function changeMeal(di,k,val){ PLAN.dias[di][k].receta=val; saveState(); renderAll(); }
+function chgPers(di,k,delta){
+  const s=PLAN.dias[di][k];
+  s.porciones=Math.min(8,Math.max(1,(s.porciones||2)+delta));
+  saveState(); renderAll();
+}
+
+function renderOrden(){
+  const el=document.getElementById('orden');
+  el.innerHTML = PLAN.orden.map((o,i)=>{
+    const html=o.replace(/(TANDA GRANDE|adelanto clave)/g,'<b>$1</b>');
+    return `<div class="order-step"><div class="n">${i+1}</div><div class="d">${html}</div></div>`;
+  }).join('');
+}
+
+/* ---------- SHOPPING (computed) ---------- */
+function canonName(item){ return DATA.canon[item]||item; }
+function isStaple(item){ const low=item.toLowerCase(); return DATA.stapleWords.some(w=>low.includes(w)); }
+function computeCompra(){
+  const dem=demandas();
+  const out={verduleria:{},carniceria:{},lacteos:{},almacen:{}}; const staples=new Set();
+  Object.keys(dem).forEach(id=>{
+    const r=REC[id]; if(!r) return;
+    const factor=dem[id]/r.rinde;
+    r.ingredientes.forEach(ing=>{
+      if(ing.rubro==='reuso') return;
+      if(isStaple(ing.item)){ DATA.stapleList.forEach(s=>{ if(ing.item.toLowerCase().includes(s.toLowerCase())) staples.add(s); }); return; }
+      const bag=out[ing.rubro]; if(!bag) return;
+      const key=canonName(ing.item);
+      if(!bag[key]) bag[key]=[];
+      bag[key].push({ing,factor});
+    });
+  });
+  return {out,staples:[...staples].sort()};
+}
+function renderCompra(){
+  const {out,staples}=computeCompra(); const host=document.getElementById('compra'); host.innerHTML='';
+  const panel=document.createElement('div'); panel.className='panel';
+  RUBRO_ORDER.forEach(rk=>{
+    const items=out[rk]; const keys=Object.keys(items); if(!keys.length) return;
+    const div=document.createElement('div'); div.className='rubro';
+    div.innerHTML=`<div class="rt">${iconRubro(rk)} ${DATA.rubros[rk]}</div>`;
+    keys.sort().forEach(item=>{
+      const cants=cantsDe(items[item]);
+      const id='c_'+rk+'_'+item.replace(/[^a-zA-Z0-9]/g,'');
+      const row=document.createElement('div'); row.className='shop-item'+(checks[id]?' checked':'');
+      row.innerHTML=`<input type="checkbox" id="${id}" ${checks[id]?'checked':''} onchange="toggleCheck('${id}')">
+        <label for="${id}"><b>${item}</b> <span class="q">— ${cants}</span></label>`;
+      div.appendChild(row);
+    });
+    panel.appendChild(div);
+  });
+  if(staples.length){
+    const div=document.createElement('div'); div.className='rubro';
+    div.innerHTML=`<div class="rt">🧂 Condimentos y básicos (revisá que tengas)</div><div class="muted" style="padding:4px 0">${staples.join(' · ')}</div>`;
+    panel.appendChild(div);
+  }
+  host.appendChild(panel);
+}
+function sumaTotal(cants){ return cants.join(' + '); }
+function iconRubro(r){return {verduleria:'🥕',carniceria:'🥩',lacteos:'🧀',almacen:'🥫'}[r]||'•';}
+function toggleCheck(id){ checks[id]=!checks[id]; renderCompra(); }
+function resetChecks(){ checks={}; renderCompra(); }
+function copyList(){
+  const {out,staples}=computeCompra(); let txt='LISTA DE COMPRAS\n\n';
+  RUBRO_ORDER.forEach(rk=>{ const items=out[rk]; const keys=Object.keys(items); if(!keys.length)return;
+    txt+=DATA.rubros[rk].toUpperCase()+'\n';
+    keys.sort().forEach(item=>{ txt+='  - '+item+' — '+cantsDe(items[item])+'\n'; });
+    txt+='\n';
+  });
+  if(staples.length) txt+='CONDIMENTOS Y BÁSICOS\n  '+staples.join(', ')+'\n';
+  navigator.clipboard.writeText(txt).then(()=>alert('Lista copiada ✅'),()=>alert('No se pudo copiar'));
+}
+
+/* ---------- BANK ---------- */
+let filter='Todas';
+const FILTERS=['Todas','Favorita','Pollo','Carne','Pescado','Mariscos','Huevos','Verduras','Milanesas','Tartas','Pastas','Cremas y sopas','Base para reusar'];
+function proteinaMatch(r,f){
+  if(f==='Pescado') return r.proteina==='Merluza'||r.proteina==='Tilapia'||r.proteina==='Atún';
+  if(f==='Carne') return r.proteina==='Carne vacuna';
+  if(f==='Mariscos') return r.proteina==='Camarones';
+  return r.proteina===f;
+}
+function renderFilters(){
+  const el=document.getElementById('filters');
+  el.innerHTML=FILTERS.map(f=>`<button class="chip ${f===filter?'active':''}" onclick="setFilter('${f.replace(/'/g,"\\'")}')">${f}</button>`).join('');
+}
+function setFilter(f){ filter=f; renderFilters(); renderBank(); }
+function renderBank(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const grid=document.getElementById('cardgrid'); grid.innerHTML='';
+  DATA.recetas.filter(r=>{
+    let ok=true;
+    if(filter!=='Todas'){
+      if(['Pollo','Carne','Pescado','Mariscos','Huevos','Verduras'].includes(filter)) ok=proteinaMatch(r,filter);
+      else ok=r.tags.includes(filter);
+    }
+    if(ok && q) ok=(r.nombre.toLowerCase().includes(q)||r.tags.join(' ').toLowerCase().includes(q)||r.proteina.toLowerCase().includes(q));
+    return ok;
+  }).forEach(r=>{
+    const c=document.createElement('div'); c.className='rcard'; c.onclick=()=>openModal(r.id);
+    c.innerHTML=`<div class="em">${r.emoji}</div><h4>${r.nombre}</h4>
+      <div class="tagrow">${r.tags.slice(0,3).map(t=>`<span class="t ${t==='Favorita'?'fav':''}">${t}</span>`).join('')}</div>
+      <div class="meta">⏱ ${r.tiempo} · 🍽 ${r.porciones} · ${r.dificultad}</div>`;
+    grid.appendChild(c);
+  });
+}
+
+/* ---------- MODAL ---------- */
+function openModal(id){
+  const r=REC[id]; if(!r) return;
+  const factor=factorDisplay(id);
+  const ing=r.ingredientes.map(i=>`<li class="${i.rubro==='reuso'?'reuso':''}"><span>${i.rubro==='reuso'?'♻️ ':''}${i.item}</span><span class="c">${ingCant(i,factor)}</span></li>`).join('');
+  const pasos=r.pasos.map(p=>`<li>${p}</li>`).join('');
+  const tips=r.tips.map(t=>`<li>${t}</li>`).join('');
+  document.getElementById('modal').innerHTML=`
+    <div class="mh">
+      <button class="close" onclick="closeModal()">×</button>
+      <div class="em">${r.emoji}</div><h3>${r.nombre}</h3>
+      <div class="badges"><span>⏱ ${r.tiempo}</span><span>🍽 ${factor!==1?'ajustada para '+porcionesDisplay(id)+' porciones':r.porciones}</span><span>📊 ${r.dificultad}</span><span>🔧 ${r.equipo.join(', ')}</span></div>
+    </div>
+    <div class="mb">
+      <h5>Ingredientes</h5><ul class="ing-list">${ing}</ul>
+      <h5>Paso a paso</h5><ol class="steps">${pasos}</ol>
+      <h5>Cómo debería quedar</h5><p>${r.resultado}</p>
+      <div class="callout"><b>♻️ Reutilización:</b> ${r.reuso}</div>
+      <h5>Tips</h5><ul class="plain">${tips}</ul>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeModal(); });
+
+/* ---------- GUIA ---------- */
+function renderGuia(){ document.getElementById('conserva').innerHTML=PLAN.conservacion.map(c=>`<li>${c}</li>`).join(''); }
+
+/* ---------- BOOKLET (lo que se imprime = recetario para la cocinera) ---------- */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function bkMenu(){
+  const rows=PLAN.dias.map(d=>{
+    const a=d.almuerzo,c=d.cena,ra=REC[a.receta],rc=REC[c.receta];
+    const who=s=>s.porciones===1?'1 persona':s.porciones+' personas';
+    return `<tr><td class="bk-dia">${esc(d.dia)}</td>
+      <td>${ra.emoji} ${esc(ra.nombre)}<br><span class="bk-who">👥 ${who(a)}</span></td>
+      <td>${rc.emoji} ${esc(rc.nombre)}<br><span class="bk-who">👥 ${who(c)}</span></td></tr>`;
+  }).join('');
+  return `<table class="bk-menu"><tr><th></th><th>🥗 Almuerzo</th><th>🌙 Cena</th></tr>${rows}</table>`;
+}
+function bkOrden(){ return PLAN.orden.map((o,i)=>`<div class="bk-ostep"><div class="bk-on">${i+1}</div><div>${esc(o)}</div></div>`).join(''); }
+function bkCompra(){
+  const {out,staples}=computeCompra(); const ICON={verduleria:'🥕',carniceria:'🥩',lacteos:'🧀',almacen:'🥫'};
+  let cols='';
+  RUBRO_ORDER.forEach(rk=>{ const items=out[rk]; const keys=Object.keys(items); if(!keys.length)return;
+    const rows=keys.sort().map(item=>{
+      const q=cantsDe(items[item]);
+      return `<tr><td class="bk-chk">☐</td><td>${esc(item)}</td><td class="bk-qt">${esc(q)}</td></tr>`;
+    }).join('');
+    cols+=`<div class="bk-shopcol"><h4>${ICON[rk]} ${esc(DATA.rubros[rk])}</h4><table class="bk-shop">${rows}</table></div>`;
+  });
+  const st=`<div class="bk-staples"><b>🧂 Condimentos y básicos (revisá que tengas):</b> ${esc(staples.join(' · '))}</div>`;
+  return `<div class="bk-shopgrid">${cols}</div>${st}`;
+}
+function bkReceta(id,first){
+  const r=REC[id]; if(!r)return'';
+  const factor=factorDisplay(id);
+  const ings=r.ingredientes.map(i=>{
+    const cls=i.rubro==='reuso'?' class="bk-reuso"':''; const mk=i.rubro==='reuso'?'♻️ ':'';
+    return `<tr${cls}><td>${mk}${esc(i.item)}</td><td class="bk-c">${esc(ingCant(i,factor))}</td></tr>`;
+  }).join('');
+  const pasos=r.pasos.map(p=>`<li>${esc(p)}</li>`).join('');
+  const tips=r.tips.map(t=>`<li>${esc(t)}</li>`).join('');
+  return `<div class="bk-receta${first?' bk-first':''}">`+`
+    <div class="bk-rh"><span class="bk-rem">${r.emoji}</span><h3>${esc(r.nombre)}</h3></div>
+    <div class="bk-rmeta">⏱ ${esc(r.tiempo)} &nbsp;·&nbsp; 🍽 ${factor!==1?'ajustada para '+porcionesDisplay(id)+' porciones':esc(r.porciones)} &nbsp;·&nbsp; 📊 ${esc(r.dificultad)} &nbsp;·&nbsp; 🔧 ${esc(r.equipo.join(', '))}</div>
+    <div class="bk-rcols"><div><h5>Ingredientes</h5><table class="bk-ing">${ings}</table></div>
+      <div><h5>Paso a paso</h5><ol>${pasos}</ol></div></div>
+    <div class="bk-cal"><b>👀 Cómo debería quedar:</b> ${esc(r.resultado)}</div>
+    <div class="bk-cal bk-reu"><b>♻️ Reutilización:</b> ${esc(r.reuso)}</div>
+    <div class="bk-tips"><b>Tips:</b><ul>${tips}</ul></div></div>`;
+}
+function renderBooklet(){
+  const order=['pollo-desmenuzado','bolonesa'];
+  PLAN.dias.forEach(d=>['almuerzo','cena'].forEach(k=>{ if(!order.includes(d[k].receta)) order.push(d[k].receta); }));
+  const recetas=order.map((id,i)=>bkReceta(id,i===0)).join('');
+  const conserva=PLAN.conservacion.map(c=>`<li>${esc(c)}</li>`).join('');
+  document.getElementById('print-root').innerHTML=`
+    <div class="bk-cover"><h1>🍳 Recetario de la semana</h1>
+      <p>Comida casera, rica y fácil para toda la semana. Cada receta con su paso a paso, cómo debería quedar y cómo reusar las preparaciones. Pensado para cocinar de lunes a viernes.</p>
+      <div class="bk-wk">📅 ${esc(PLAN.nombre)} · Almuerzos y cenas</div></div>
+    <div class="bk-intro"><b>Comensales y organización:</b> en el menú de abajo cada comida indica para cuántas personas es; las cantidades de cada receta y la lista de compras ya están ajustadas a eso. La idea: cocinar las tandas grandes (pollo, boloñesa, milanesas) una vez y reusarlas varios días, con mucha verdura y sin que parezca dieta.</div>
+    <h2 class="bk-sec">📅 Menú de la semana</h2>${bkMenu()}
+    <h2 class="bk-sec">👩‍🍳 Orden de cocina — qué preparar primero</h2>${bkOrden()}
+    <h2 class="bk-sec">🛒 Lista de compras (ordenada por sector del súper)</h2>${bkCompra()}
+    <div class="bk-pb"></div>
+    <h2 class="bk-sec">📖 Recetas paso a paso</h2>
+    <p class="bk-note">Arrancá por las dos <b>preparaciones base</b> (pollo desmenuzado y boloñesa): con ellas se resuelven varias comidas.</p>
+    ${recetas}
+    <div class="bk-pb"></div>
+    <h2 class="bk-sec">💡 Guía de cocina y conservación</h2>
+    <div class="bk-guia">
+      <div class="bk-gbox"><h4>🗄️ Conservación y recalentado</h4><ul>${conserva}</ul></div>
+      <div class="bk-gbox"><h4>🔥 Equipos</h4><ul>
+        <li><b>Air fryer:</b> milanesas, papas y pescado crocantes con poco aceite. No amontonar.</li>
+        <li><b>Horno:</b> tartas, pasteles, lasaña y bandejas de pollo con verduras.</li>
+        <li><b>Arrocera:</b> arroz y también hervir el pollo (guardá el caldo).</li>
+        <li><b>Licuadora:</b> cremas sin grumos y picar la verdura de la boloñesa.</li>
+        <li><b>Microondas:</b> recalentar purés y cremas con un chorrito de leche.</li></ul></div>
+      <div class="bk-gbox"><h4>🧼 Seguridad e higiene</h4><ul>
+        <li>Cociná carnes, pollo, pescado y mariscos <b>por completo</b> y el huevo bien firme.</li>
+        <li>Recalentá las sobras hasta que <b>humeen</b>.</li>
+        <li>Lavá bien lo que se come crudo (tomate, palta, lechuga).</li>
+        <li>El pescado, cocinalo el día que lo comprás o congelalo enseguida.</li></ul></div>
+      <div class="bk-gbox"><h4>♻️ Minimizar desperdicios</h4><ul>
+        <li>Cociná las tandas grandes al inicio de la semana: rinden 3-4 comidas.</li>
+        <li>Guardá el caldo del pollo: base de sopas.</li>
+        <li>Sobras con etiqueta y fecha; a los 3 días, al freezer.</li>
+        <li>Verduras que se ponen blandas → crema o boloñesa.</li></ul></div>
+    </div>
+    <div class="bk-foot">Hecho con cariño para cocinar rico toda la semana 🧡</div>`;
+}
+
+/* init */
+loadState(); renderAll(); renderFilters(); renderBank(); renderGuia();
+</script>
+</body>
+</html>
