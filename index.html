@@ -113,49 +113,51 @@ ul.plain{margin:6px 0;padding-left:18px} ul.plain li{margin-bottom:5px}
   #print-root{display:block!important}
 }
 
-.bk-cover{background:linear-gradient(135deg,#C15B3F,#A64A32);color:#fff;padding:40px 34px;border-radius:14px;margin-bottom:20px}
-.bk-cover h1{font-size:30px;margin:0 0 6px}
-.bk-cover p{opacity:.95;font-size:13px;margin:0;max-width:520px}
-.bk-cover .bk-wk{display:inline-block;margin-top:14px;background:rgba(255,255,255,.2);padding:5px 14px;border-radius:999px;font-weight:700;font-size:13px}
-.bk-sec{color:#A64A32;font-size:17px;border-bottom:2px solid #EDE4D6;padding-bottom:5px;margin:20px 0 10px}
-.bk-intro{background:#F0F5EC;border-left:4px solid #5B7A4E;padding:10px 13px;border-radius:8px;font-size:11px;margin-bottom:12px}
-.bk-note{font-size:10.5px;color:#7A6E62;margin:0 0 10px}
+/* Recetario imprimible: modo ahorro de tinta — sin fondos de color, solo bordes finos y texto negro/gris */
+#print-root{color:#000}
+.bk-cover{padding:0 0 10px;border-bottom:2px solid #000;margin-bottom:14px}
+.bk-cover h1{font-size:22px;margin:0 0 4px}
+.bk-cover p{font-size:11px;margin:0;max-width:520px;color:#444}
+.bk-cover .bk-wk{display:inline-block;margin-top:8px;border:1px solid #999;padding:3px 12px;border-radius:999px;font-weight:700;font-size:11px}
+.bk-sec{color:#000;font-size:15px;border-bottom:1px solid #999;padding-bottom:4px;margin:18px 0 8px}
+.bk-intro{border-left:2px solid #666;padding:6px 10px;font-size:11px;margin-bottom:12px;color:#333}
+.bk-note{font-size:10.5px;color:#555;margin:0 0 10px}
 table.bk-menu{width:100%;border-collapse:collapse;font-size:11px}
-table.bk-menu th{background:#5B7A4E;color:#fff;padding:7px;text-align:left;font-size:11px}
-table.bk-menu td{border:1px solid #EDE4D6;padding:7px;vertical-align:top}
-table.bk-menu td.bk-dia{background:#F3ECE0;font-weight:700;width:70px}
-.bk-who{color:#7A6E62;font-size:9.5px}
-.bk-ostep{display:flex;gap:9px;margin-bottom:7px;font-size:11px}
-.bk-ostep .bk-on{flex:0 0 20px;height:20px;background:#C15B3F;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10.5px}
+table.bk-menu th{border-bottom:1.5px solid #000;padding:5px 7px;text-align:left;font-size:11px}
+table.bk-menu td{border:1px solid #bbb;padding:6px 7px;vertical-align:top}
+table.bk-menu td.bk-dia{font-weight:700;width:70px}
+.bk-who{color:#555;font-size:9.5px}
+.bk-ostep{display:flex;gap:9px;margin-bottom:6px;font-size:11px}
+.bk-ostep .bk-on{flex:0 0 18px;height:18px;border:1.5px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px}
 .bk-shopgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
-.bk-shopcol h4{color:#A64A32;font-size:12px;border-bottom:1.5px solid #F3ECE0;padding-bottom:3px;margin:0 0 4px}
+.bk-shopcol h4{font-size:12px;border-bottom:1px solid #999;padding-bottom:2px;margin:0 0 4px}
 table.bk-shop{width:100%;border-collapse:collapse;font-size:10.6px}
 table.bk-shop td{padding:2px 0;vertical-align:top}
-table.bk-shop td.bk-chk{width:16px;color:#B9A98F}
-table.bk-shop td.bk-qt{color:#7A6E62;text-align:right;font-size:10px}
-.bk-staples{margin-top:8px;background:#FDF6E9;border-left:4px solid #E0A03C;padding:8px 11px;border-radius:8px;font-size:10.5px}
-.bk-receta{border:1px solid #EDE4D6;border-radius:12px;padding:13px 15px;margin-bottom:12px;break-inside:avoid;page-break-inside:avoid;break-before:page;page-break-before:always}
+table.bk-shop td.bk-chk{width:16px;color:#777}
+table.bk-shop td.bk-qt{color:#555;text-align:right;font-size:10px}
+.bk-staples{margin-top:8px;border-left:2px solid #666;padding:5px 10px;font-size:10.5px;color:#333}
+.bk-receta{border-top:1px solid #999;padding:11px 0 0;margin-bottom:12px;break-inside:avoid;page-break-inside:avoid;break-before:page;page-break-before:always}
 .bk-receta.bk-first{break-before:auto;page-break-before:auto}
-.bk-rh{display:flex;align-items:center;gap:9px}
-.bk-rh .bk-rem{font-size:22px}
-.bk-rh h3{font-size:15.5px;color:#3A322C;margin:0}
-.bk-rmeta{color:#7A6E62;font-size:10px;margin:5px 0 9px;border-bottom:1px dashed #EDE4D6;padding-bottom:7px}
+.bk-rh{display:flex;align-items:center;gap:8px}
+.bk-rh .bk-rem{font-size:16px}
+.bk-rh h3{font-size:14.5px;color:#000;margin:0}
+.bk-rmeta{color:#555;font-size:10px;margin:4px 0 8px;border-bottom:1px dashed #bbb;padding-bottom:6px}
 .bk-rcols{display:grid;grid-template-columns:0.9fr 1.5fr;gap:16px}
-.bk-receta h5{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#A64A32;margin:0 0 5px}
+.bk-receta h5{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#000;margin:0 0 5px}
 table.bk-ing{width:100%;border-collapse:collapse;font-size:10.6px}
-table.bk-ing td{padding:3px 0;border-bottom:1px solid #F1EADD}
-table.bk-ing td.bk-c{text-align:right;color:#7A6E62;white-space:nowrap;padding-left:6px}
-table.bk-ing tr.bk-reuso td{background:#F0F5EC}
-.bk-rcols ol{margin:0;padding-left:16px} .bk-rcols li{margin-bottom:5px}
-.bk-cal{background:#FBF7F0;border-left:3px solid #C15B3F;padding:7px 10px;border-radius:7px;font-size:10.5px;margin-top:8px}
-.bk-cal.bk-reu{border-left-color:#5B7A4E;background:#F5F8F2}
-.bk-tips{font-size:10.3px;margin-top:7px} .bk-tips ul{margin:3px 0;padding-left:16px}
-.bk-guia{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.bk-gbox{border:1px solid #EDE4D6;border-radius:10px;padding:11px 13px;font-size:10.6px}
-.bk-gbox h4{color:#A64A32;font-size:12px;margin:0 0 5px}
-.bk-gbox ul{margin:0;padding-left:15px} .bk-gbox li{margin-bottom:4px}
+table.bk-ing td{padding:2px 0;border-bottom:1px solid #ddd}
+table.bk-ing td.bk-c{text-align:right;color:#555;white-space:nowrap;padding-left:6px}
+table.bk-ing tr.bk-reuso td{font-style:italic}
+.bk-rcols ol{margin:0;padding-left:16px} .bk-rcols li{margin-bottom:4px}
+.bk-cal{border-left:2px solid #666;padding:4px 10px;font-size:10.5px;margin-top:7px;color:#333}
+.bk-cal.bk-reu{border-left-style:dashed}
+.bk-tips{font-size:10.3px;margin-top:6px;color:#333} .bk-tips ul{margin:3px 0;padding-left:16px}
+.bk-guia{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bk-gbox{border:1px solid #bbb;padding:9px 11px;font-size:10.6px}
+.bk-gbox h4{font-size:12px;margin:0 0 5px}
+.bk-gbox ul{margin:0;padding-left:15px} .bk-gbox li{margin-bottom:3px}
 .bk-pb{page-break-before:always}
-.bk-foot{text-align:center;color:#9A8B79;font-size:10px;margin-top:16px}
+.bk-foot{text-align:center;color:#777;font-size:10px;margin-top:14px}
 
 </style>
 </head>
