@@ -342,7 +342,7 @@ function ingCant(ing,factor){
   return s;
 }
 // Suma real de cantidades para la lista de compras: agrupa por unidad y suma.
-function cantsDe(entries){
+function cantsDe(entries,item){
   const esc=entries.filter(e=>e.ing.escalable&&e.ing.num2===undefined);
   const otros=entries.filter(e=>!e.ing.escalable||e.ing.num2!==undefined);
   const grupos={};
@@ -354,8 +354,23 @@ function cantsDe(entries){
     parts.push(fmtQty(g.reduce((t,e)=>t+e.ing.num*e.factor,0),u||null));
   });
   otros.forEach(e=>{ const c=ingCant(e.ing,e.factor); if(!parts.includes(c)) parts.push(c); });
+  // Si quedó partido en varias unidades pero todo se puede pasar a gramos,
+  // mostramos un total unificado para comprar de una sola vez.
+  if(parts.length>1&&otros.length===0){
+    let total=0, ok=true;
+    esc.forEach(e=>{
+      const i=e.ing;
+      if(i.unidad==='g') total+=i.num*e.factor;
+      else if(i.notag) total+=i.notag*e.factor;
+      else if(!i.unidad&&UNIT_G[item]) total+=i.num*e.factor*UNIT_G[item];
+      else ok=false;
+    });
+    if(ok&&total>0) return '≈'+fmtQty(total,'g')+' ('+parts.join(' + ')+')';
+  }
   return parts.join(' + ');
 }
+// Peso aproximado por unidad (g) para unificar compras expresadas en unidades y en peso
+const UNIT_G={'Papa':200,'Boniato':250,'Zanahoria':100,'Cebolla':150};
 
 /* ---------- TABS ---------- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
@@ -436,7 +451,7 @@ function renderCompra(){
     const div=document.createElement('div'); div.className='rubro';
     div.innerHTML=`<div class="rt">${iconRubro(rk)} ${DATA.rubros[rk]}</div>`;
     keys.sort().forEach(item=>{
-      const cants=cantsDe(items[item]);
+      const cants=cantsDe(items[item],item);
       const id='c_'+rk+'_'+item.replace(/[^a-zA-Z0-9]/g,'');
       const row=document.createElement('div'); row.className='shop-item'+(checks[id]?' checked':'');
       row.innerHTML=`<input type="checkbox" id="${id}" ${checks[id]?'checked':''} onchange="toggleCheck('${id}')">
@@ -460,7 +475,7 @@ function copyList(){
   const {out,staples}=computeCompra(); let txt='LISTA DE COMPRAS\n\n';
   RUBRO_ORDER.forEach(rk=>{ const items=out[rk]; const keys=Object.keys(items); if(!keys.length)return;
     txt+=DATA.rubros[rk].toUpperCase()+'\n';
-    keys.sort().forEach(item=>{ txt+='  - '+item+' — '+cantsDe(items[item])+'\n'; });
+    keys.sort().forEach(item=>{ txt+='  - '+item+' — '+cantsDe(items[item],item)+'\n'; });
     txt+='\n';
   });
   if(staples.length) txt+='CONDIMENTOS Y BÁSICOS\n  '+staples.join(', ')+'\n';
@@ -547,7 +562,7 @@ function bkCompra(){
   let cols='';
   RUBRO_ORDER.forEach(rk=>{ const items=out[rk]; const keys=Object.keys(items); if(!keys.length)return;
     const rows=keys.sort().map(item=>{
-      const q=cantsDe(items[item]);
+      const q=cantsDe(items[item],item);
       return `<tr><td class="bk-chk">☐</td><td>${esc(item)}</td><td class="bk-qt">${esc(q)}</td></tr>`;
     }).join('');
     cols+=`<div class="bk-shopcol"><h4>${ICON[rk]} ${esc(DATA.rubros[rk])}</h4><table class="bk-shop">${rows}</table></div>`;
