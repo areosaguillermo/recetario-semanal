@@ -52,6 +52,9 @@ button.ghost{background:#fff;color:var(--terra-d);border:1px solid var(--line)}
   font-size:15px;font-weight:700;cursor:pointer;line-height:1;padding:0}
 .slot .pers button:hover:not(:disabled){background:var(--terra);color:#fff;border-color:var(--terra)}
 .slot .pers button:disabled{opacity:.35;cursor:default}
+.syncrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#famcode{padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;max-width:220px}
+#famcode:disabled{background:var(--chip);color:var(--ink-soft)}
 .slot select{width:100%;margin-top:6px;font-size:12.5px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
 .slot .emoji{font-size:15px;margin-right:3px}
 /* SHOPPING */
@@ -183,6 +186,15 @@ table.bk-ing tr.bk-reuso td{font-style:italic}
     <h2 class="sec">📅 Menú de la semana</h2>
     <div class="weekgrid" id="weekgrid"></div>
     <div class="callout baby" style="margin-top:16px"><b>Cómo leer la semana:</b> con los botones <b>− / +</b> elegís cuántas personas comen en cada comida: las cantidades de las recetas y la lista de compras se ajustan solas. Las preparaciones grandes (pollo, boloñesa, milanesas) se cocinan una vez y se reusan varios días. Tus cambios quedan guardados en este dispositivo.</div>
+    <div class="panel no-print" style="margin-top:14px">
+      <h3>☁️ Sincronizar entre dispositivos</h3>
+      <p class="muted" style="margin:4px 0 10px">Elegí un <b>código de familia</b> (el que quieras, ej: <i>casa-lopez</i>) y usalo en todos los dispositivos: la semana y las personas por comida quedan iguales en todos, al instante. Quien conozca el código puede ver y editar la semana.</p>
+      <div class="syncrow">
+        <input id="famcode" placeholder="código de familia" autocapitalize="none" autocomplete="off">
+        <button class="action" id="syncbtn" onclick="toggleSync()">Conectar</button>
+        <span id="syncstate" class="muted"></span>
+      </div>
+    </div>
     <h2 class="sec">👩‍🍳 Orden de cocina (qué hacer primero)</h2>
     <div class="panel" id="orden"></div>
   </section>
@@ -252,31 +264,83 @@ let checks = {};
 
 /* ---------- ESTADO / PERSISTENCIA ---------- */
 const LS_KEY='recetario-estado-v2';
+function stateObj(){
+  return {dias:PLAN.dias.map(d=>({almuerzo:{receta:d.almuerzo.receta,porciones:d.almuerzo.porciones},
+                                  cena:{receta:d.cena.receta,porciones:d.cena.porciones}}))};
+}
+function applyState(s){
+  if(!s||!s.dias) return;
+  s.dias.forEach((sd,i)=>{
+    const d=PLAN.dias[i]; if(!d) return;
+    ['almuerzo','cena'].forEach(k=>{
+      if(!sd[k]) return;
+      if(REC[sd[k].receta]) d[k].receta=sd[k].receta;
+      const p=parseInt(sd[k].porciones,10);
+      if(p>=1&&p<=8) d[k].porciones=p;
+    });
+  });
+}
+let aplicandoRemoto=false;
 function saveState(){
-  try{
-    const dias=PLAN.dias.map(d=>({almuerzo:{receta:d.almuerzo.receta,porciones:d.almuerzo.porciones},
-                                  cena:{receta:d.cena.receta,porciones:d.cena.porciones}}));
-    localStorage.setItem(LS_KEY,JSON.stringify({dias}));
-  }catch(e){}
+  try{localStorage.setItem(LS_KEY,JSON.stringify(stateObj()));}catch(e){}
+  if(!aplicandoRemoto&&window.__syncPush) window.__syncPush(stateObj());
 }
 function loadState(){
-  try{
-    const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(!s||!s.dias) return;
-    s.dias.forEach((sd,i)=>{
-      const d=PLAN.dias[i]; if(!d) return;
-      ['almuerzo','cena'].forEach(k=>{
-        if(!sd[k]) return;
-        if(REC[sd[k].receta]) d[k].receta=sd[k].receta;
-        const p=parseInt(sd[k].porciones,10);
-        if(p>=1&&p<=8) d[k].porciones=p;
-      });
-    });
-  }catch(e){}
+  try{ applyState(JSON.parse(localStorage.getItem(LS_KEY)||'null')); }catch(e){}
 }
 function resetSemana(){
-  try{localStorage.removeItem(LS_KEY);}catch(e){}
   PLAN=JSON.parse(JSON.stringify(DATA.semana1));
+  saveState();
   renderAll();
+}
+
+/* ---------- SINCRONIZACIÓN ENTRE DISPOSITIVOS (Firebase) ---------- */
+let syncOn=false;
+function normCode(s){ return (s||'').toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9\-_]/g,'').slice(0,40); }
+function toggleSync(){
+  if(syncOn){
+    if(window.__syncDisconnect) window.__syncDisconnect();
+    syncOn=false;
+    try{localStorage.removeItem('recetario-familia');}catch(e){}
+    updateSyncUI('Este dispositivo quedó desconectado (guarda solo localmente).');
+    return;
+  }
+  const code=normCode(document.getElementById('famcode').value);
+  if(!code){ alert('Escribí un código de familia (ej: casa-lopez)'); return; }
+  if(!window.__syncConnect){ alert('La sincronización todavía está cargando. Probá de nuevo en unos segundos.'); return; }
+  try{localStorage.setItem('recetario-familia',code);}catch(e){}
+  document.getElementById('famcode').value=code;
+  syncOn=true;
+  window.__syncConnect(code);
+  updateSyncUI('Conectando…');
+}
+function syncAutoconnect(code){
+  const inp=document.getElementById('famcode'); if(inp) inp.value=code;
+  syncOn=true;
+  window.__syncConnect(code);
+  updateSyncUI('Conectando…');
+}
+window.__syncIncoming=v=>{
+  syncOn=true; updateSyncUI('🟢 Sincronizado con "'+(localStorage.getItem('recetario-familia')||'')+'"');
+  if(JSON.stringify(v)===JSON.stringify(stateObj())) return;
+  aplicandoRemoto=true;
+  try{
+    applyState(v);
+    try{localStorage.setItem(LS_KEY,JSON.stringify(stateObj()));}catch(e){}
+    renderAll();
+  } finally{ aplicandoRemoto=false; }
+};
+window.__syncSeed=()=>{
+  syncOn=true; updateSyncUI('🟢 Sincronizado — se publicó tu semana para el resto de la familia');
+  if(window.__syncPush) window.__syncPush(stateObj());
+};
+window.__syncError=m=>{ updateSyncUI('⚠️ Error de sincronización: '+m); };
+function updateSyncUI(msg){
+  const b=document.getElementById('syncbtn'), inp=document.getElementById('famcode'), st=document.getElementById('syncstate');
+  if(!b) return;
+  b.textContent=syncOn?'Desconectar':'Conectar';
+  inp.disabled=syncOn;
+  st.textContent=msg||'';
 }
 function renderAll(){ renderWeek(); renderCompra(); renderBooklet(); }
 
@@ -633,6 +697,36 @@ function renderBooklet(){
 
 /* init */
 loadState(); renderAll(); renderFilters(); renderBank(); renderGuia();
+</script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getDatabase,ref,onValue,set} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+const app=initializeApp({
+  apiKey:'AIzaSyCo1k5PBtZ9dtLXHEHbNCMvKXoG9f0ucN0',
+  authDomain:'recetario-semanal-sync.firebaseapp.com',
+  databaseURL:'https://recetario-semanal-sync-default-rtdb.firebaseio.com',
+  projectId:'recetario-semanal-sync',
+  appId:'1:81629130950:web:e07428b467668ecdf227c7'
+});
+const db=getDatabase(app);
+let unsub=null,famRef=null,timer=null;
+window.__syncConnect=code=>{
+  if(unsub) unsub();
+  famRef=ref(db,'familias/'+code+'/plan');
+  unsub=onValue(famRef,snap=>{
+    const v=snap.val();
+    if(v==null) window.__syncSeed();
+    else window.__syncIncoming(v);
+  },err=>window.__syncError(err.message));
+};
+window.__syncDisconnect=()=>{ if(unsub) unsub(); unsub=null; famRef=null; clearTimeout(timer); };
+window.__syncPush=state=>{
+  if(!famRef) return;
+  clearTimeout(timer);
+  timer=setTimeout(()=>{ set(famRef,state).catch(e=>window.__syncError(e.message)); },300);
+};
+const saved=localStorage.getItem('recetario-familia');
+if(saved) syncAutoconnect(saved);
 </script>
 </body>
 </html>
